@@ -55,6 +55,7 @@ export default function Expenditure({ onNavigate }) {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-11
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [pickerYear, setPickerYear] = useState(today.getFullYear());
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // View mode: 'calendar' | 'analysis'
   const [viewMode, setViewMode] = useState('calendar');
@@ -279,6 +280,74 @@ export default function Expenditure({ onNavigate }) {
     } catch (err) {
       console.error('Failed to delete transaction', err);
     }
+  };
+
+  // Download monthly expenditure report as CSV
+  const handleDownloadCSV = () => {
+    const lines = [];
+
+    // Metadata header
+    lines.push(`"MONTHLY EXPENDITURE REPORT"`);
+    lines.push(`"Month","${monthName}"`);
+    lines.push(`"Exported On","${new Date().toLocaleString()}"`);
+    lines.push(`"Currency","INR (${currency})"`);
+    lines.push(`"Total Income","${monthStats.income}"`);
+    lines.push(`"Total Spendings","${monthStats.spendings}"`);
+    lines.push(`"Net Balance / Savings","${monthStats.netBalance}"`);
+    lines.push(`"Savings Rate","${monthStats.savingsRate}%"`);
+    lines.push(`"Total Transactions","${monthExpenses.length}"`);
+    lines.push('');
+
+    // Table Columns
+    lines.push(`"Date","Type","Why / Description","Category","Amount (${currency})"`);
+
+    // Sort by date ascending
+    const sorted = [...monthExpenses].sort((a, b) => (a.date > b.date ? 1 : -1));
+
+    if (sorted.length === 0) {
+      lines.push(`"No transactions logged for this month","","","",""`);
+    } else {
+      sorted.forEach((item) => {
+        const date = item.date || '';
+        const type = item.type === 'income' ? 'Income' : 'Spend';
+        const why = (item.why || '').replace(/"/g, '""');
+        const category = (item.category || 'General').replace(/"/g, '""');
+        const amount = item.amount || 0;
+        lines.push(`"${date}","${type}","${why}","${category}","${amount}"`);
+      });
+    }
+
+    // Summary totals at bottom
+    lines.push('');
+    lines.push(`"TOTAL INCOME","","","","${monthStats.income}"`);
+    lines.push(`"TOTAL SPENDINGS","","","","${monthStats.spendings}"`);
+    lines.push(`"NET BALANCE / SAVINGS","","","","${monthStats.netBalance}"`);
+
+    // Add UTF-8 BOM so Excel opens with proper character encoding
+    const csvContent = '\uFEFF' + lines.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const safeMonth = monthName.replace(/[^a-zA-Z0-9]/g, '_');
+    a.download = `Monthly_Expenditure_${safeMonth}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setShowExportMenu(false);
+  };
+
+  const handleCopySummary = () => {
+    const text = `Monthly Expenditure Summary - ${monthName}\n` +
+      `• Total Income: ${currency}${monthStats.income.toLocaleString()}\n` +
+      `• Total Spendings: ${currency}${monthStats.spendings.toLocaleString()}\n` +
+      `• Net Balance: ${monthStats.netBalance >= 0 ? '+' : '-'}${currency}${Math.abs(monthStats.netBalance).toLocaleString()}\n` +
+      `• Savings Rate: ${monthStats.savingsRate}%\n` +
+      `• Total Transactions: ${monthExpenses.length}`;
+    navigator.clipboard.writeText(text);
+    alert('Monthly summary copied to clipboard!');
+    setShowExportMenu(false);
   };
 
   // Selected day items for modal/drawer
@@ -509,6 +578,73 @@ export default function Expenditure({ onNavigate }) {
           <div className="flex items-center gap-2.5 self-end sm:self-auto flex-wrap">
             <ThemeToggle />
 
+            {/* Download Monthly Expenditure Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowExportMenu((v) => !v)}
+                className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                title={`Download ${monthName} Report`}
+              >
+                <span>📥</span>
+                <span>Download Report</span>
+                <span className="text-[10px] text-slate-400">▾</span>
+              </button>
+
+              {showExportMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl p-2 space-y-1 animate-fade-in">
+                    <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-700/60">
+                      Download {monthName}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadCSV}
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <span className="text-base">📊</span>
+                      <div>
+                        <span className="block font-bold">Download as CSV</span>
+                        <span className="text-[10px] text-slate-400 font-normal">Excel / Google Sheets spreadsheet</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowExportMenu(false);
+                        window.print();
+                      }}
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <span className="text-base">🖨️</span>
+                      <div>
+                        <span className="block font-bold">Print / Save as PDF</span>
+                        <span className="text-[10px] text-slate-400 font-normal">Clean print-ready view</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopySummary}
+                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
+                    >
+                      <span className="text-base">📋</span>
+                      <div>
+                        <span className="block font-bold">Copy Summary</span>
+                        <span className="text-[10px] text-slate-400 font-normal">Copy quick text report</span>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Quick Add Transaction Button */}
             <button
               type="button"
@@ -653,6 +789,18 @@ export default function Expenditure({ onNavigate }) {
                   <span>Analysis</span>
                 </button>
               </div>
+
+              {/* Quick CSV Download Button */}
+              <button
+                type="button"
+                onClick={handleDownloadCSV}
+                title={`Download ${monthName} CSV report`}
+                className="px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <span>📥</span>
+                <span className="hidden sm:inline">Download</span>
+                <span>CSV</span>
+              </button>
             </div>
           </div>
         </section>
