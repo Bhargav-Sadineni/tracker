@@ -578,73 +578,6 @@ export default function Expenditure({ onNavigate }) {
           <div className="flex items-center gap-2.5 self-end sm:self-auto flex-wrap">
             <ThemeToggle />
 
-            {/* Download Monthly Expenditure Dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowExportMenu((v) => !v)}
-                className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
-                title={`Download ${monthName} Report`}
-              >
-                <span>📥</span>
-                <span>Download Report</span>
-                <span className="text-[10px] text-slate-400">▾</span>
-              </button>
-
-              {showExportMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowExportMenu(false)}
-                  />
-                  <div className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl p-2 space-y-1 animate-fade-in">
-                    <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-700/60">
-                      Download {monthName}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleDownloadCSV}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="text-base">📊</span>
-                      <div>
-                        <span className="block font-bold">Download as CSV</span>
-                        <span className="text-[10px] text-slate-400 font-normal">Excel / Google Sheets spreadsheet</span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowExportMenu(false);
-                        window.print();
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="text-base">🖨️</span>
-                      <div>
-                        <span className="block font-bold">Print / Save as PDF</span>
-                        <span className="text-[10px] text-slate-400 font-normal">Clean print-ready view</span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopySummary}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
-                    >
-                      <span className="text-base">📋</span>
-                      <div>
-                        <span className="block font-bold">Copy Summary</span>
-                        <span className="text-[10px] text-slate-400 font-normal">Copy quick text report</span>
-                      </div>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
             {/* Quick Add Transaction Button */}
             <button
               type="button"
@@ -789,26 +722,14 @@ export default function Expenditure({ onNavigate }) {
                   <span>Analysis</span>
                 </button>
               </div>
-
-              {/* Quick CSV Download Button */}
-              <button
-                type="button"
-                onClick={handleDownloadCSV}
-                title={`Download ${monthName} CSV report`}
-                className="px-3 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>📥</span>
-                <span className="hidden sm:inline">Download</span>
-                <span>CSV</span>
-              </button>
             </div>
           </div>
         </section>
 
         {/* 1. CALENDAR VIEW (Display all the days in that month & amount spent below each day) */}
         {viewMode === 'calendar' && (
-          <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 p-4 sm:p-6 shadow-sm space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
+          <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 p-2.5 sm:p-6 shadow-sm space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2 px-1 sm:px-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl">📅</span>
                 <h2 className="text-base sm:text-lg font-bold font-display text-slate-900 dark:text-white">
@@ -821,7 +742,7 @@ export default function Expenditure({ onNavigate }) {
             </div>
 
             {/* Weekdays Header */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider py-1 border-b border-slate-100 dark:border-slate-800">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2.5 text-center text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider py-1 border-b border-slate-100 dark:border-slate-800">
               <span>Sun</span>
               <span>Mon</span>
               <span>Tue</span>
@@ -831,14 +752,14 @@ export default function Expenditure({ onNavigate }) {
               <span>Sat</span>
             </div>
 
-            {/* Days Grid */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+            {/* Days Grid: Decongested for mobile, exact spacious look preserved for laptop */}
+            <div className="grid grid-cols-7 gap-1 sm:gap-2.5">
               {calendarDays.map((cell) => {
                 if (cell.isPadding) {
                   return (
                     <div
                       key={cell.key}
-                      className="min-h-[78px] sm:min-h-[96px] rounded-2xl bg-slate-50/40 dark:bg-slate-800/20 border border-transparent"
+                      className="min-h-[58px] sm:min-h-[96px] rounded-xl sm:rounded-2xl bg-slate-50/40 dark:bg-slate-800/20 border border-transparent"
                     />
                   );
                 }
@@ -854,7 +775,7 @@ export default function Expenditure({ onNavigate }) {
                       setSelectedDayStr(cell.dateStr);
                       setFormDate(cell.dateStr);
                     }}
-                    className={`min-h-[82px] sm:min-h-[102px] p-2 sm:p-2.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between hover:scale-[1.02] hover:shadow-md ${
+                    className={`min-h-[58px] sm:min-h-[102px] p-1 sm:p-2.5 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col justify-between hover:scale-[1.02] hover:shadow-md ${
                       isSelected
                         ? 'border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/25 bg-indigo-50/40 dark:bg-indigo-950/30'
                         : cell.isToday
@@ -869,9 +790,9 @@ export default function Expenditure({ onNavigate }) {
                     {/* Top: Day Number & Today indicator */}
                     <div className="flex items-center justify-between">
                       <span
-                        className={`text-xs sm:text-sm font-black font-display ${
+                        className={`text-xs sm:text-sm font-black font-display leading-none ${
                           cell.isToday
-                            ? 'h-6 w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs'
+                            ? 'h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] sm:text-xs shadow-sm'
                             : 'text-slate-800 dark:text-slate-200'
                         }`}
                       >
@@ -879,14 +800,14 @@ export default function Expenditure({ onNavigate }) {
                       </span>
 
                       {cell.itemsCount > 0 && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        <span className="text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                           {cell.itemsCount}
                         </span>
                       )}
                     </div>
 
-                    {/* Bottom: Explicitly display Total Spend on each day */}
-                    <div className="mt-1 space-y-0.5">
+                    {/* Bottom: LAPTOP VIEW (Kept as it is for laptop view) */}
+                    <div className="hidden sm:block mt-1 space-y-0.5">
                       <div className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tight">
                         Total Spend
                       </div>
@@ -905,17 +826,68 @@ export default function Expenditure({ onNavigate }) {
                         </div>
                       )}
                     </div>
+
+                    {/* Bottom: MOBILE VIEW (Clean, single-line, uncongested!) */}
+                    <div className="sm:hidden mt-0.5 flex flex-col items-center justify-center text-center">
+                      {hasSpend ? (
+                        <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 tracking-tight leading-none block truncate max-w-full">
+                          -{currency}{cell.spendTotal >= 10000 ? `${(cell.spendTotal / 1000).toFixed(0)}k` : cell.spendTotal}
+                        </span>
+                      ) : hasIncome ? (
+                        <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none block truncate max-w-full">
+                          +{currency}{cell.incomeTotal >= 10000 ? `${(cell.incomeTotal / 1000).toFixed(0)}k` : cell.incomeTotal}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-slate-300 dark:text-slate-700 leading-none block">·</span>
+                      )}
+                      {hasSpend && hasIncome && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-0.5" title="Has income" />
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* Mobile-only Selected Day Quick Summary Card */}
+            <div className="sm:hidden pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Day: {selectedDayStr || todayStr}
+                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-black text-rose-600 dark:text-rose-400 font-display">
+                      Spent: {currency}{calendarDays.find((d) => d.dateStr === (selectedDayStr || todayStr))?.spendTotal || 0}
+                    </span>
+                    {(calendarDays.find((d) => d.dateStr === (selectedDayStr || todayStr))?.incomeTotal || 0) > 0 && (
+                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 font-display">
+                        Income: +{currency}{calendarDays.find((d) => d.dateStr === (selectedDayStr || todayStr))?.incomeTotal}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dStr = selectedDayStr || todayStr;
+                    setSelectedDayStr(dStr);
+                    setFormDate(dStr);
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-sm active:scale-95 transition"
+                >
+                  View / Add
+                </button>
+              </div>
+            </div>
           </section>
         )}
 
-        {/* 2. ANALYSIS VIEW (As requested by the top arrow in sketch) */}
+        {/* 2. ANALYSIS VIEW (Contains the Download Option & Multi-Horizon Analysis) */}
         {viewMode === 'analysis' && (
           <div className="space-y-6">
-            {/* Top Analysis Header & Horizon Selector */}
+            {/* Top Analysis Header & Horizon Selector + Download Option */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-base sm:text-lg font-bold font-display text-slate-900 dark:text-white flex items-center gap-2">
@@ -926,26 +898,139 @@ export default function Expenditure({ onNavigate }) {
                 </p>
               </div>
 
-              {/* 1 Month, 3 Month, 1 Year horizon selector (explicit in diagram note) */}
-              <div className="flex items-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-1 text-xs font-bold">
-                {[
-                  { label: '1 Month', val: '1m' },
-                  { label: '3 Months', val: '3m' },
-                  { label: '1 Year', val: '1y' },
-                ].map((hz) => (
+              {/* Right Controls: Horizon Selector + Download Report Dropdown in Analysis Section */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {/* 1 Month, 3 Month, 1 Year horizon selector */}
+                <div className="flex items-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-1 text-xs font-bold">
+                  {[
+                    { label: '1 Month', val: '1m' },
+                    { label: '3 Months', val: '3m' },
+                    { label: '1 Year', val: '1y' },
+                  ].map((hz) => (
+                    <button
+                      key={hz.val}
+                      type="button"
+                      onClick={() => setAnalysisHorizon(hz.val)}
+                      className={`px-3 py-1 rounded-xl transition ${
+                        analysisHorizon === hz.val
+                          ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm font-bold'
+                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {hz.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Download Monthly Expenditure Dropdown in Analysis Section */}
+                <div className="relative">
                   <button
-                    key={hz.val}
                     type="button"
-                    onClick={() => setAnalysisHorizon(hz.val)}
-                    className={`px-3 py-1 rounded-xl transition ${
-                      analysisHorizon === hz.val
-                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm font-bold'
-                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                    }`}
+                    onClick={() => setShowExportMenu((v) => !v)}
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                    title={`Download ${monthName} Expenditure Report`}
                   >
-                    {hz.label}
+                    <span>📥</span>
+                    <span>Download Report</span>
+                    <span className="text-[10px] text-slate-400">▾</span>
                   </button>
-                ))}
+
+                  {showExportMenu && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowExportMenu(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl p-2 space-y-1 animate-fade-in">
+                        <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-700/60">
+                          Download {monthName}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleDownloadCSV}
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
+                        >
+                          <span className="text-base">📊</span>
+                          <div>
+                            <span className="block font-bold">Download as CSV</span>
+                            <span className="text-[10px] text-slate-400 font-normal">Excel / Google Sheets spreadsheet</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            window.print();
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
+                        >
+                          <span className="text-base">🖨️</span>
+                          <div>
+                            <span className="block font-bold">Print / Save as PDF</span>
+                            <span className="text-[10px] text-slate-400 font-normal">Clean print-ready view</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleCopySummary}
+                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
+                        >
+                          <span className="text-base">📋</span>
+                          <div>
+                            <span className="block font-bold">Copy Summary</span>
+                            <span className="text-[10px] text-slate-400 font-normal">Copy quick text report</span>
+                          </div>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Dedicated Monthly Data Export Banner in Analysis Section */}
+            <div className="p-4 sm:p-5 rounded-3xl border border-indigo-200/80 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/70 via-purple-50/40 to-slate-50/60 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block font-display">
+                  Monthly Financial Export
+                </span>
+                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
+                  Download {monthName} Data
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Export complete records of all {monthExpenses.length} transactions, category breakdowns, and net balances.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleDownloadCSV}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer"
+                >
+                  <span>📊</span>
+                  <span>Download CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-2 cursor-pointer"
+                >
+                  <span>🖨️</span>
+                  <span>Print / PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopySummary}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+                  title="Copy text summary"
+                >
+                  <span>📋</span>
+                  <span>Copy</span>
+                </button>
               </div>
             </div>
 
