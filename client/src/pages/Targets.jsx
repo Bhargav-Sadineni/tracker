@@ -262,6 +262,312 @@ export default function Targets({ onNavigate, onSelectActivity }) {
       });
   }, [unifiedTargets, filterType, filterStatus, filterCategory, searchQuery]);
 
+  // On mobile view: show purely Reminders, filtered by status, category, and search
+  const mobileReminders = useMemo(() => {
+    return unifiedTargets
+      .filter((t) => {
+        // Purely Reminders on mobile
+        if (t.itemType !== 'reminder') return false;
+
+        // Status filter
+        if (filterStatus === 'in_progress' && t.completed) return false;
+        if (filterStatus === 'completed' && !t.completed) return false;
+        if (filterStatus === 'urgent' && (t.completed || t.daysLeft > 7)) return false;
+
+        // Category filter
+        if (filterCategory !== 'All' && t.category !== filterCategory) return false;
+
+        // Search query
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          const matchTitle = t.title.toLowerCase().includes(q);
+          const matchDesc = t.description && t.description.toLowerCase().includes(q);
+          if (!matchTitle && !matchDesc) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (filterStatus === 'all' && a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+        if (a.daysLeft !== b.daysLeft) {
+          return a.daysLeft - b.daysLeft;
+        }
+        return a.title.localeCompare(b.title);
+      });
+  }, [unifiedTargets, filterStatus, filterCategory, searchQuery]);
+
+  // Shared Card Renderer for both Laptop and Mobile views
+  const renderTargetCard = (item) => {
+    const daysLeft = item.daysLeft;
+    const daysInfo = formatDaysLeft(item.targetDate, item.completed);
+    const pct = Math.min(
+      100,
+      Math.round(((item.currentValue || 0) / (item.targetValue || 1)) * 100)
+    );
+
+    const isReminder = item.itemType === 'reminder';
+    const isTodayReminder = isReminder && !item.completed && daysLeft === 0;
+
+    return (
+      <div
+        key={item.key}
+        className={`rounded-2xl border bg-white dark:bg-slate-900/90 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3 group ${
+          item.completed
+            ? 'border-emerald-200 dark:border-emerald-900/40 opacity-80'
+            : isTodayReminder
+            ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-500/50 bg-amber-50/25 dark:bg-amber-950/20 shadow-md'
+            : daysLeft <= 3
+            ? 'border-rose-300 dark:border-rose-900/60 ring-1 ring-rose-500/30'
+            : 'border-slate-200/90 dark:border-slate-800'
+        }`}
+      >
+        <div>
+          <div className="flex items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                {item.category || 'General'}
+              </span>
+              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                item.itemType === 'reminder'
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
+                  : item.itemType === 'goal'
+                  ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/80 dark:text-violet-300'
+                  : item.itemType === 'challenge_habit'
+                  ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300'
+                  : 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300'
+              }`}>
+                {item.typeBadge}
+              </span>
+            </div>
+
+            {/* Prominent Days Left Badge */}
+            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border shrink-0 ${
+              item.completed
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300'
+                : isTodayReminder
+                ? 'bg-rose-500 text-white border-rose-600 animate-pulse shadow-sm'
+                : daysLeft <= 3
+                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-300 animate-pulse'
+                : daysLeft <= 7
+                ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300'
+                : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border-indigo-200'
+            }`}>
+              {daysInfo.text}
+            </span>
+          </div>
+
+          <h3
+            onClick={() => {
+              if (!item.isActivity) setSelectedGoal(item.raw);
+              else onSelectActivity(item.raw);
+            }}
+            className="font-bold text-base text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition line-clamp-1"
+          >
+            {item.title}
+          </h3>
+          {item.description && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+              {item.description}
+            </p>
+          )}
+        </div>
+
+        {/* Target Date & Progress / Platform Details */}
+        {item.itemType === 'reminder' ? (
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1.5 flex-wrap">
+                <span>📅 {item.targetDate || 'No date'}</span>
+                {item.time && (
+                  <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-bold text-[11px]">
+                    ⏰ {item.time}
+                  </span>
+                )}
+              </span>
+              <span className={`font-bold ${item.completed ? 'text-emerald-600 dark:text-emerald-400' : daysLeft === 0 ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-amber-600 dark:text-amber-400'}`}>
+                {item.completed ? '✓ Attended' : daysLeft === 0 ? '🚨 TODAY!' : 'Scheduled'}
+              </span>
+            </div>
+
+            {item.link ? (
+              <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
+                <span className="text-[13px]">📍</span>
+                <span className="text-slate-400 dark:text-slate-500 text-[11px] font-semibold">Platform:</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{item.link}</span>
+              </div>
+            ) : (
+              <div className="h-1 bg-amber-100/60 dark:bg-amber-950/40 rounded-full" />
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span>{item.itemType === 'challenge_habit' ? 'Finish' : 'Target'}: {item.targetDate || 'No date'}</span>
+              <span className="font-bold text-slate-900 dark:text-white">
+                {item.itemType === 'challenge_habit' && item.challengeInfo
+                  ? item.challengeInfo.label
+                  : item.itemType === 'specific_habit'
+                  ? (item.completed ? '✓ Completed' : 'Pending Payment / Check')
+                  : item.goalType === 'checkbox'
+                  ? (item.completed ? '✓ Completed' : 'Pending Completion')
+                  : `${item.currentValue} / ${item.targetValue} ${item.unit} (${pct}%)`}
+              </span>
+            </div>
+
+            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${item.itemType === 'specific_habit' || item.goalType === 'checkbox' ? (item.completed ? 100 : 0) : pct}%`,
+                  backgroundColor: item.color || '#8b5cf6',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Footer Controls */}
+        <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          {item.itemType === 'reminder' ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const nextVal = !item.completed;
+                  updateGoal(item.id, { completed: nextVal, currentValue: nextVal ? 1 : 0 });
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 ${
+                  item.completed
+                    ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300'
+                    : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
+                }`}
+              >
+                <span>{item.completed ? '✓' : '○'}</span>
+                <span>{item.completed ? 'Attended / Done' : 'Mark Attended / Done'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => deleteGoal(item.id)}
+                className="h-8 w-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center text-xs transition"
+                title="Delete Reminder"
+              >
+                🗑️
+              </button>
+            </div>
+          ) : !item.isActivity ? (
+            item.goalType === 'checkbox' ? (
+              /* Checkbox / Single Tick Box Goal (e.g. Complete OS) */
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextDone = !item.completed;
+                    updateGoal(item.id, {
+                      completed: nextDone,
+                      currentValue: nextDone ? 1 : 0,
+                    });
+                    if (nextDone) triggerConfetti();
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95 ${
+                    item.completed
+                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300'
+                      : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white'
+                  }`}
+                >
+                  <span
+                    className={`h-4 w-4 rounded-md border flex items-center justify-center text-xs font-black transition-all ${
+                      item.completed
+                        ? 'border-emerald-600 bg-emerald-600 text-white'
+                        : 'border-white/80 bg-white/20'
+                    }`}
+                  >
+                    {item.completed ? '✓' : ''}
+                  </span>
+                  <span>{item.completed ? 'Completed / Done' : 'Mark as Done'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deleteGoal(item.id)}
+                  className="h-8 w-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center text-xs transition"
+                  title="Delete Goal"
+                >
+                  🗑️
+                </button>
+              </div>
+            ) : (
+              /* Measurable Numeric Goal (e.g. Master 100 DSA Problems) */
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = Math.max(0, (item.currentValue || 0) - 1);
+                    updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
+                  }}
+                  className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold"
+                >
+                  -1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = (item.currentValue || 0) + 1;
+                    updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
+                  }}
+                  className="px-2 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 text-xs font-bold"
+                >
+                  +1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVal = (item.currentValue || 0) + 5;
+                    updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
+                  }}
+                  className="px-2 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 text-xs font-bold"
+                >
+                  +5
+                </button>
+              </div>
+            )
+          ) : (
+            /* Time-bound Habit: Mark Completed / Paid toggle button */
+            <button
+              type="button"
+              onClick={() => toggleActivityCompleted(item.raw)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                item.completed
+                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300'
+                  : item.itemType === 'specific_habit'
+                  ? 'bg-sky-600 hover:bg-sky-700 text-white shadow-sm'
+                  : 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
+              }`}
+            >
+              <span>{item.completed ? '✓' : '○'}</span>
+              <span>{item.completed ? 'Completed' : item.itemType === 'specific_habit' ? 'Mark Paid / Done' : 'Complete Challenge'}</span>
+            </button>
+          )}
+
+          {/* View Details Link */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!item.isActivity) setSelectedGoal(item.raw);
+              else onSelectActivity(item.raw);
+            }}
+            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+          >
+            <span>{item.itemType === 'reminder' ? 'Reminder Details' : item.isActivity ? 'Open Habit' : 'All in Detail'}</span>
+            <span>➔</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen w-full bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       {/* Top Navbar */}
@@ -275,7 +581,7 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                   Tracker
                 </span>
                 <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                  Target Deadlines, Reminders & Milestones
+                  Target Deadlines, Reminders &amp; Milestones
                 </p>
               </div>
             </div>
@@ -295,7 +601,7 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                 className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm transition flex items-center gap-1.5 font-extrabold"
               >
                 <span>🎯</span>
-                <span>Targets & Deadlines</span>
+                <span>Targets &amp; Deadlines</span>
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
                   {activeTargets.length}
                 </span>
@@ -326,7 +632,7 @@ export default function Targets({ onNavigate, onSelectActivity }) {
             <button
               type="button"
               onClick={() => setShowNewGoalModal(true)}
-              className="px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-violet-600/20 active:scale-95 transition flex items-center gap-1.5 min-h-[40px]"
+              className="hidden sm:inline-flex px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-violet-600/20 active:scale-95 transition items-center gap-1.5 min-h-[40px]"
             >
               <span>🎯</span>
               <span>+ New Goal</span>
@@ -334,7 +640,7 @@ export default function Targets({ onNavigate, onSelectActivity }) {
             <button
               type="button"
               onClick={() => setShowNewActivityModal(true)}
-              className="px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm transition flex items-center gap-1.5 min-h-[40px]"
+              className="hidden sm:inline-flex px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm transition items-center gap-1.5 min-h-[40px]"
             >
               <span>⏱️</span>
               <span>+ Habit Deadline</span>
@@ -352,8 +658,8 @@ export default function Targets({ onNavigate, onSelectActivity }) {
           </div>
         )}
 
-        {/* 4 Targets Overview Metric Cards */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* 4 Targets Overview Metric Cards (Laptop Only: Hidden on Mobile) */}
+        <section className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* 1. Active Target Deadlines */}
           <div className="rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between">
@@ -456,8 +762,8 @@ export default function Targets({ onNavigate, onSelectActivity }) {
           </div>
         </section>
 
-        {/* Filter Bar & Controls */}
-        <div className="flex flex-col gap-3.5 bg-white dark:bg-slate-900/80 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        {/* LAPTOP VIEW: Filter Bar & Controls */}
+        <div className="hidden sm:flex flex-col gap-3.5 bg-white dark:bg-slate-900/80 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
           {/* Row 1: Target Type Filters */}
           <div className="flex items-center overflow-x-auto gap-1.5 pb-2 border-b border-slate-100 dark:border-slate-800 scrollbar-none">
             <button
@@ -514,29 +820,139 @@ export default function Targets({ onNavigate, onSelectActivity }) {
             </button>
           </div>
 
-          {/* Row 2: Status Tabs */}
+          {/* Row 2: Status Tabs, Category Pills & Laptop Search Bar */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              <button
+                type="button"
+                onClick={() => setFilterStatus('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  filterStatus === 'all'
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                All Status
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('in_progress')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  filterStatus === 'in_progress'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                ⏳ Active ({activeTargets.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('urgent')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  filterStatus === 'urgent'
+                    ? 'bg-rose-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                🚨 Urgent ({urgentTargets.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatus('completed')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                  filterStatus === 'completed'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                ✓ Completed ({completedTargets.length})
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Category Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                {allCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setFilterCategory(cat)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                      filterCategory === cat
+                        ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Laptop Search Bar */}
+              <div className="relative w-56 lg:w-64">
+                <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search targets..."
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/90 pl-8 pr-8 py-1.5 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                    title="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* LAPTOP VIEW: Strict Time-Remaining Order Banner (Kept for Laptop, Hidden on Mobile) */}
+        <div className="hidden sm:flex px-4 py-2.5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 items-center justify-between text-xs text-indigo-900 dark:text-indigo-300">
+          <div className="flex items-center gap-2">
+            <span>⏱️</span>
+            <span className="font-semibold">
+              Strict Time-Remaining Order:
+            </span>
+            <span className="text-indigo-700/80 dark:text-indigo-300/80">
+              Tasks with less time left automatically rise to the top.
+            </span>
+          </div>
+          <span className="font-bold text-[11px] bg-indigo-100 dark:bg-indigo-900/60 px-2 py-0.5 rounded-md">
+            Auto-prioritized
+          </span>
+        </div>
+
+        {/* MOBILE VIEW: Filter Controls (No strict time text, Full-width search bar, Reminders-focused) */}
+        <div className="sm:hidden flex flex-col gap-3 bg-white dark:bg-slate-900/90 p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          {/* Status Tabs */}
           <div className="flex items-center overflow-x-auto gap-1.5 pb-1 scrollbar-none">
             <button
               type="button"
               onClick={() => setFilterStatus('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                 filterStatus === 'all'
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
             >
-              All Status
+              All Reminders ({reminderTargets.length})
             </button>
             <button
               type="button"
               onClick={() => setFilterStatus('in_progress')}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                 filterStatus === 'in_progress'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'bg-amber-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
             >
-              ⏳ Active ({activeTargets.length})
+              ⏳ Pending ({reminderTargets.filter((r) => !r.completed).length})
             </button>
             <button
               type="button"
@@ -544,10 +960,10 @@ export default function Targets({ onNavigate, onSelectActivity }) {
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                 filterStatus === 'urgent'
                   ? 'bg-rose-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
             >
-              🚨 Urgent ({urgentTargets.length})
+              🚨 Urgent ({reminderTargets.filter((r) => !r.completed && r.daysLeft <= 7).length})
             </button>
             <button
               type="button"
@@ -555,323 +971,56 @@ export default function Targets({ onNavigate, onSelectActivity }) {
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
                 filterStatus === 'completed'
                   ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
               }`}
             >
-              ✓ Completed ({completedTargets.length})
+              ✓ Attended ({reminderTargets.filter((r) => r.completed).length})
             </button>
           </div>
 
-          {/* Row 3: Category Pills & Full-Width / Large Search Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-            {/* Category Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
-              {allCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilterCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                    filterCategory === cat
-                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          {/* Category Filter Pills (Horizontal Scroll) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+            {allCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilterCategory(cat)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition ${
+                  filterCategory === cat
+                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-            {/* Generous Width Search Bar */}
-            <div className="relative w-full sm:w-80 md:w-96">
-              <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search targets, OA, EMI, tasks..."
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/90 pl-8 pr-8 py-2 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
-                  title="Clear search"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
+          {/* Full-Width Search Bar for Mobile */}
+          <div className="relative w-full">
+            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search reminders, OA, exams, meetings..."
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/90 pl-8 pr-8 py-2.5 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Targets Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sortedFilteredTargets.map((item) => {
-            const daysLeft = item.daysLeft;
-            const daysInfo = formatDaysLeft(item.targetDate, item.completed);
-            const pct = Math.min(
-              100,
-              Math.round(((item.currentValue || 0) / (item.targetValue || 1)) * 100)
-            );
-
-            const isReminder = item.itemType === 'reminder';
-            const isTodayReminder = isReminder && !item.completed && daysLeft === 0;
-
-            return (
-              <div
-                key={item.key}
-                className={`rounded-2xl border bg-white dark:bg-slate-900/90 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3 group ${
-                  item.completed
-                    ? 'border-emerald-200 dark:border-emerald-900/40 opacity-80'
-                    : isTodayReminder
-                    ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-500/50 bg-amber-50/25 dark:bg-amber-950/20 shadow-md'
-                    : daysLeft <= 3
-                    ? 'border-rose-300 dark:border-rose-900/60 ring-1 ring-rose-500/30'
-                    : 'border-slate-200/90 dark:border-slate-800'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                        {item.category || 'General'}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                        item.itemType === 'reminder'
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300'
-                          : item.itemType === 'goal'
-                          ? 'bg-violet-100 text-violet-700 dark:bg-violet-950/80 dark:text-violet-300'
-                          : item.itemType === 'challenge_habit'
-                          ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/80 dark:text-orange-300'
-                          : 'bg-sky-100 text-sky-800 dark:bg-sky-950/80 dark:text-sky-300'
-                      }`}>
-                        {item.typeBadge}
-                      </span>
-                    </div>
-
-                    {/* Prominent Days Left Badge */}
-                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border shrink-0 ${
-                      item.completed
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300'
-                        : isTodayReminder
-                        ? 'bg-rose-500 text-white border-rose-600 animate-pulse shadow-sm'
-                        : daysLeft <= 3
-                        ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border-rose-300 animate-pulse'
-                        : daysLeft <= 7
-                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300'
-                        : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border-indigo-200'
-                    }`}>
-                      {daysInfo.text}
-                    </span>
-                  </div>
-
-                  <h3
-                    onClick={() => {
-                      if (!item.isActivity) setSelectedGoal(item.raw);
-                      else onSelectActivity(item.raw);
-                    }}
-                    className="font-bold text-base text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition line-clamp-1"
-                  >
-                    {item.title}
-                  </h3>
-                  {item.description && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-
-                {/* Target Date & Progress / Platform Details */}
-                {item.itemType === 'reminder' ? (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1.5 flex-wrap">
-                        <span>📅 {item.targetDate || 'No date'}</span>
-                        {item.time && (
-                          <span className="px-1.5 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-bold text-[11px]">
-                            ⏰ {item.time}
-                          </span>
-                        )}
-                      </span>
-                      <span className={`font-bold ${item.completed ? 'text-emerald-600 dark:text-emerald-400' : daysLeft === 0 ? 'text-rose-600 dark:text-rose-400 font-black' : 'text-amber-600 dark:text-amber-400'}`}>
-                        {item.completed ? '✓ Attended' : daysLeft === 0 ? '🚨 TODAY!' : 'Scheduled'}
-                      </span>
-                    </div>
-
-                    {item.link ? (
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 px-2.5 py-1.5 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                        <span className="text-[13px]">📍</span>
-                        <span className="text-slate-400 dark:text-slate-500 text-[11px] font-semibold">Platform:</span>
-                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate">{item.link}</span>
-                      </div>
-                    ) : (
-                      <div className="h-1 bg-amber-100/60 dark:bg-amber-950/40 rounded-full" />
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      <span>{item.itemType === 'challenge_habit' ? 'Finish' : 'Target'}: {item.targetDate || 'No date'}</span>
-                      <span className="font-bold text-slate-900 dark:text-white">
-                        {item.itemType === 'challenge_habit' && item.challengeInfo
-                          ? item.challengeInfo.label
-                          : item.itemType === 'specific_habit'
-                          ? (item.completed ? '✓ Completed' : 'Pending Payment / Check')
-                          : item.goalType === 'checkbox'
-                          ? (item.completed ? '✓ Completed' : 'Pending Completion')
-                          : `${item.currentValue} / ${item.targetValue} ${item.unit} (${pct}%)`}
-                      </span>
-                    </div>
-
-                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${item.itemType === 'specific_habit' || item.goalType === 'checkbox' ? (item.completed ? 100 : 0) : pct}%`,
-                          backgroundColor: item.color || '#8b5cf6',
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Footer Controls */}
-                <div className="pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  {item.itemType === 'reminder' ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextVal = !item.completed;
-                          updateGoal(item.id, { completed: nextVal, currentValue: nextVal ? 1 : 0 });
-                        }}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 ${
-                          item.completed
-                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300'
-                            : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white'
-                        }`}
-                      >
-                        <span>{item.completed ? '✓' : '○'}</span>
-                        <span>{item.completed ? 'Attended / Done' : 'Mark Attended / Done'}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => deleteGoal(item.id)}
-                        className="h-8 w-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center text-xs transition"
-                        title="Delete Reminder"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ) : !item.isActivity ? (
-                    item.goalType === 'checkbox' ? (
-                      /* Checkbox / Single Tick Box Goal (e.g. Complete OS) */
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const nextDone = !item.completed;
-                            updateGoal(item.id, {
-                              completed: nextDone,
-                              currentValue: nextDone ? 1 : 0,
-                            });
-                            if (nextDone) triggerConfetti();
-                          }}
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95 ${
-                            item.completed
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300'
-                              : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white'
-                          }`}
-                        >
-                          <span
-                            className={`h-4 w-4 rounded-md border flex items-center justify-center text-xs font-black transition-all ${
-                              item.completed
-                                ? 'bg-emerald-600 text-white border-emerald-600'
-                                : 'border-white/80 bg-white/20 text-transparent'
-                            }`}
-                          >
-                            ✓
-                          </span>
-                          <span>{item.completed ? 'Completed' : 'Mark as Done'}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => deleteGoal(item.id)}
-                          className="h-8 w-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center text-xs transition"
-                          title="Delete Goal"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    ) : (
-                      /* Numeric Progress Goal */
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => updateGoal(item.id, { currentValue: Math.max(0, (item.currentValue || 0) - 1) })}
-                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                        >
-                          -
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const nextVal = (item.currentValue || 0) + 1;
-                            updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
-                          }}
-                          className="h-7 w-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-xs font-bold text-white shadow-sm"
-                        >
-                          +
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const nextVal = (item.currentValue || 0) + 5;
-                            updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
-                          }}
-                          className="px-2 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 text-xs font-bold"
-                        >
-                          +5
-                        </button>
-                      </div>
-                    )
-                  ) : (
-                    /* Time-bound Habit: Mark Completed / Paid toggle button */
-                    <button
-                      type="button"
-                      onClick={() => toggleActivityCompleted(item.raw)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                        item.completed
-                          ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300'
-                          : item.itemType === 'specific_habit'
-                          ? 'bg-sky-600 hover:bg-sky-700 text-white shadow-sm'
-                          : 'bg-amber-500 hover:bg-amber-600 text-white shadow-sm'
-                      }`}
-                    >
-                      <span>{item.completed ? '✓' : '○'}</span>
-                      <span>{item.completed ? 'Completed' : item.itemType === 'specific_habit' ? 'Mark Paid / Done' : 'Complete Challenge'}</span>
-                    </button>
-                  )}
-
-                  {/* View Details Link */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!item.isActivity) setSelectedGoal(item.raw);
-                      else onSelectActivity(item.raw);
-                    }}
-                    className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
-                  >
-                    <span>{item.itemType === 'reminder' ? 'Reminder Details' : item.isActivity ? 'Open Habit' : 'All in Detail'}</span>
-                    <span>➔</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+        {/* LAPTOP VIEW: All Targets Grid */}
+        <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sortedFilteredTargets.map(renderTargetCard)}
 
           {sortedFilteredTargets.length === 0 && (
             <div className="col-span-full rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 p-12 text-center text-slate-500 dark:text-slate-400">
@@ -903,6 +1052,28 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                   + New EMI / 10-Day Habit
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* MOBILE VIEW: Purely Reminders Grid */}
+        <div className="sm:hidden flex flex-col gap-3.5">
+          {mobileReminders.map(renderTargetCard)}
+
+          {mobileReminders.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900/60">
+              <span className="text-3xl block mb-2">🔔</span>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">No reminders found</h4>
+              <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                Add exam dates, online assessments (OA), deadlines, or meetings to keep them right here.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowNewReminderModal(true)}
+                className="mt-3.5 px-4 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold shadow-md shadow-amber-600/20 hover:bg-amber-700"
+              >
+                + Add Reminder / OA
+              </button>
             </div>
           )}
         </div>
