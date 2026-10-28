@@ -318,15 +318,15 @@ export default function Targets({ onNavigate, onSelectActivity }) {
             <button
               type="button"
               onClick={() => setShowNewReminderModal(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-xs font-bold shadow-md shadow-amber-500/25 active:scale-95 transition flex items-center gap-1.5"
+              className="px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-xs font-black shadow-md shadow-amber-500/25 active:scale-95 transition flex items-center gap-1.5 min-h-[40px]"
             >
               <span>🔔</span>
-              <span>+ Add Reminder / OA</span>
+              <span>+ Add Reminder</span>
             </button>
             <button
               type="button"
               onClick={() => setShowNewGoalModal(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-violet-600/20 active:scale-95 transition flex items-center gap-1.5"
+              className="px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-black shadow-md shadow-violet-600/20 active:scale-95 transition flex items-center gap-1.5 min-h-[40px]"
             >
               <span>🎯</span>
               <span>+ New Goal</span>
@@ -334,7 +334,7 @@ export default function Targets({ onNavigate, onSelectActivity }) {
             <button
               type="button"
               onClick={() => setShowNewActivityModal(true)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+              className="px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm transition flex items-center gap-1.5 min-h-[40px]"
             >
               <span>⏱️</span>
               <span>+ Habit Deadline</span>

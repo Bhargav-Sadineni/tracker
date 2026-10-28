@@ -15,10 +15,23 @@
     --text-page: #f8fafc;
   }
 
-  body {
+    body {
     background-color: var(--bg-page);
     color: var(--text-page);
     @apply font-sans selection:bg-indigo-500 selection:text-white transition-colors duration-200;
+  }
+}
+
+/* Prevent accidental mobile browser zoom and 300ms double-tap delay */
+html, body, button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+/* On iOS and mobile browsers, inputs smaller than 16px trigger automatic page zoom on focus.
+   Forcing 16px on mobile viewports completely eliminates this unwanted auto-zoom behavior. */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
   }
 }
 

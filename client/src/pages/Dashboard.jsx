@@ -402,15 +402,16 @@ export default function Dashboard({ onSelectActivity, onNavigate }) {
               </button>
             </nav>
 
-            {/* Mobile-only CTA */}
-            <div className="sm:hidden flex items-center gap-1.5">
+            {/* Mobile-only Header Action: Prominent, larger New Habit button */}
+            <div className="sm:hidden flex items-center gap-2">
               <ThemeToggle />
               <button
                 onClick={() => setOpen(true)}
-                className="rounded-xl bg-indigo-600 p-2 text-white shadow-md active:scale-95"
-                title="New Habit"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-indigo-600/30 active:scale-95 transition min-h-[40px]"
+                title="Create New Habit"
               >
-                <span className="text-sm font-bold leading-none">+</span>
+                <span className="text-base font-black leading-none">+</span>
+                <span>New Habit</span>
               </button>
             </div>
           </div>
@@ -1048,6 +1049,19 @@ export default function Dashboard({ onSelectActivity, onNavigate }) {
           </div>
         </section>
       </main>
+
+      {/* Mobile Floating Action Button: Quick, large + New Habit button */}
+      <div className="sm:hidden fixed bottom-20 right-4 z-30">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-600 text-white font-black text-xs shadow-xl shadow-indigo-600/40 active:scale-90 transition cursor-pointer border border-white/20"
+          title="Create New Habit"
+        >
+          <span className="text-lg leading-none font-black">+</span>
+          <span>New Habit</span>
+        </button>
+      </div>
 
       {/* Modals */}
       {open && (

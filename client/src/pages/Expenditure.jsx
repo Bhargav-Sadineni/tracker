@@ -585,9 +585,9 @@ export default function Expenditure({ onNavigate }) {
                 setFormDate(todayStr);
                 setSelectedDayStr(todayStr);
               }}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
             >
-              <span>+</span>
+              <span className="text-sm leading-none">+</span>
               <span>Add Transaction</span>
             </button>
           </div>
@@ -651,56 +651,59 @@ export default function Expenditure({ onNavigate }) {
             </div>
 
             {/* Middle & Right: Income, Spendings, Net Cards + Analysis Toggle */}
-            <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
-              {/* Income Metric Card */}
-              <div className="rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 px-3.5 py-2 sm:px-4 sm:py-2.5 min-w-[130px]">
-                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block">
-                  Income
-                </span>
-                <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-display">
-                  +{currency}{monthStats.income.toLocaleString()}
-                </span>
-                <span className="text-[9px] text-emerald-600/80 dark:text-emerald-400/80 block mt-0.5">
-                  {monthStats.incomeCount} credits
-                </span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
+              {/* Income, Spend, Net Balance ALL IN ONE ROW in mobile view */}
+              <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:flex sm:items-center sm:gap-3">
+                {/* Income Metric Card */}
+                <div className="rounded-2xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 p-2 sm:px-4 sm:py-2.5 min-w-0 sm:min-w-[125px] flex flex-col justify-between">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block truncate">
+                    Income
+                  </span>
+                  <span className="text-xs sm:text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 font-display truncate">
+                    +{currency}{monthStats.income >= 100000 ? `${(monthStats.income / 1000).toFixed(1)}k` : monthStats.income.toLocaleString()}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] text-emerald-600/80 dark:text-emerald-400/80 block mt-0.5 truncate">
+                    {monthStats.incomeCount} credits
+                  </span>
+                </div>
+
+                {/* Spend Metric Card */}
+                <div className="rounded-2xl border border-rose-200/80 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 p-2 sm:px-4 sm:py-2.5 min-w-0 sm:min-w-[125px] flex flex-col justify-between">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider block truncate">
+                    Spend
+                  </span>
+                  <span className="text-xs sm:text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400 font-display truncate">
+                    -{currency}{monthStats.spendings >= 100000 ? `${(monthStats.spendings / 1000).toFixed(1)}k` : monthStats.spendings.toLocaleString()}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] text-rose-600/80 dark:text-rose-400/80 block mt-0.5 truncate">
+                    {monthStats.spendCount} debits
+                  </span>
+                </div>
+
+                {/* Net Balance / Savings Card */}
+                <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 p-2 sm:px-4 sm:py-2.5 min-w-0 sm:min-w-[125px] flex flex-col justify-between">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block truncate">
+                    Net Balance
+                  </span>
+                  <span className={`text-xs sm:text-lg sm:text-xl font-black font-display truncate ${
+                    monthStats.netBalance >= 0
+                      ? 'text-indigo-600 dark:text-indigo-400'
+                      : 'text-amber-500'
+                  }`}>
+                    {monthStats.netBalance >= 0 ? '+' : '-'}{currency}{Math.abs(monthStats.netBalance) >= 100000 ? `${(Math.abs(monthStats.netBalance) / 1000).toFixed(1)}k` : Math.abs(monthStats.netBalance).toLocaleString()}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] text-slate-400 block mt-0.5 truncate">
+                    {monthStats.savingsRate}% saved
+                  </span>
+                </div>
               </div>
 
-              {/* Spendings Metric Card */}
-              <div className="rounded-2xl border border-rose-200/80 dark:border-rose-900/50 bg-rose-50/40 dark:bg-rose-950/20 px-3.5 py-2 sm:px-4 sm:py-2.5 min-w-[130px]">
-                <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wider block">
-                  Spendings
-                </span>
-                <span className="text-lg sm:text-xl font-black text-rose-600 dark:text-rose-400 font-display">
-                  -{currency}{monthStats.spendings.toLocaleString()}
-                </span>
-                <span className="text-[9px] text-rose-600/80 dark:text-rose-400/80 block mt-0.5">
-                  {monthStats.spendCount} debits
-                </span>
-              </div>
-
-              {/* Net Balance / Savings Card */}
-              <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-3.5 py-2 sm:px-4 sm:py-2.5 min-w-[130px]">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                  Net Balance
-                </span>
-                <span className={`text-lg sm:text-xl font-black font-display ${
-                  monthStats.netBalance >= 0
-                    ? 'text-indigo-600 dark:text-indigo-400'
-                    : 'text-amber-500'
-                }`}>
-                  {monthStats.netBalance >= 0 ? '+' : '-'}{currency}{Math.abs(monthStats.netBalance).toLocaleString()}
-                </span>
-                <span className="text-[9px] text-slate-400 block mt-0.5">
-                  {monthStats.savingsRate}% saved
-                </span>
-              </div>
-
-              {/* View Switcher: Calendar vs Analysis (As indicated by top right arrow in diagram) */}
-              <div className="flex items-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-1 text-xs font-bold shadow-inner">
+              {/* View Switcher: Calendar vs Analysis */}
+              <div className="flex items-center justify-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-1 text-xs font-bold shadow-inner w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setViewMode('calendar')}
-                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     viewMode === 'calendar'
                       ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm font-extrabold'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -712,7 +715,7 @@ export default function Expenditure({ onNavigate }) {
                 <button
                   type="button"
                   onClick={() => setViewMode('analysis')}
-                  className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
                     viewMode === 'analysis'
                       ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm font-extrabold'
                       : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'

@@ -118,14 +118,14 @@ export default function MobileHabitCard({ activity: a, days, entries, today, onS
                   {dayName}
                 </span>
 
-                {/* Day Interactive Action Button (40x40px for iPhone 17 touch) */}
+                {/* Day Interactive Action Button (44x44px Apple HIG recommended touch target) */}
                 {a.measure === 'checkbox' ? (
                   <button
                     type="button"
                     aria-label={`${a.name} on ${d}`}
                     onClick={() => onSetValue(a, d, done ? 0 : 1)}
                     style={done ? { backgroundColor: habitColor } : {}}
-                    className={`h-10 w-10 rounded-xl flex items-center justify-center font-black text-sm transition-all duration-200 active:scale-85 ${
+                    className={`h-11 w-11 rounded-xl flex items-center justify-center font-black text-sm transition-all duration-200 active:scale-85 ${
                       done
                         ? 'text-white shadow-md animate-pop border-transparent'
                         : 'border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-transparent hover:border-slate-400'
@@ -138,7 +138,7 @@ export default function MobileHabitCard({ activity: a, days, entries, today, onS
                     type="button"
                     aria-label={`${a.name} measure on ${d}`}
                     onClick={() => handleOpenDayEdit(d, ent)}
-                    className={`h-10 w-10 rounded-xl flex flex-col items-center justify-center text-xs font-black transition-all duration-200 active:scale-90 border ${
+                    className={`h-11 w-11 rounded-xl flex flex-col items-center justify-center text-xs font-black transition-all duration-200 active:scale-90 border ${
                       done
                         ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-600 dark:text-emerald-400 shadow-sm animate-pop'
                         : isBelow
