@@ -901,139 +901,26 @@ export default function Expenditure({ onNavigate }) {
                 </p>
               </div>
 
-              {/* Right Controls: Horizon Selector + Download Report Dropdown in Analysis Section */}
-              <div className="flex items-center gap-2.5 flex-wrap">
-                {/* 1 Month, 3 Month, 1 Year horizon selector */}
-                <div className="flex items-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-1 text-xs font-bold">
-                  {[
-                    { label: '1 Month', val: '1m' },
-                    { label: '3 Months', val: '3m' },
-                    { label: '1 Year', val: '1y' },
-                  ].map((hz) => (
-                    <button
-                      key={hz.val}
-                      type="button"
-                      onClick={() => setAnalysisHorizon(hz.val)}
-                      className={`px-3 py-1 rounded-xl transition ${
-                        analysisHorizon === hz.val
-                          ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm font-bold'
-                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                      }`}
-                    >
-                      {hz.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Download Monthly Expenditure Dropdown in Analysis Section */}
-                <div className="relative">
+              {/* Right Controls: 1 Month, 3 Month, 1 Year horizon selector */}
+              <div className="flex items-center rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-1 text-xs font-bold">
+                {[
+                  { label: '1 Month', val: '1m' },
+                  { label: '3 Months', val: '3m' },
+                  { label: '1 Year', val: '1y' },
+                ].map((hz) => (
                   <button
+                    key={hz.val}
                     type="button"
-                    onClick={() => setShowExportMenu((v) => !v)}
-                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
-                    title={`Download ${monthName} Expenditure Report`}
+                    onClick={() => setAnalysisHorizon(hz.val)}
+                    className={`px-3 py-1 rounded-xl transition ${
+                      analysisHorizon === hz.val
+                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm font-bold'
+                        : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                    }`}
                   >
-                    <span>📥</span>
-                    <span>Download Report</span>
-                    <span className="text-[10px] text-slate-400">▾</span>
+                    {hz.label}
                   </button>
-
-                  {showExportMenu && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShowExportMenu(false)}
-                      />
-                      <div className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl p-2 space-y-1 animate-fade-in">
-                        <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-700/60">
-                          Download {monthName}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={handleDownloadCSV}
-                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <span className="text-base">📊</span>
-                          <div>
-                            <span className="block font-bold">Download as CSV</span>
-                            <span className="text-[10px] text-slate-400 font-normal">Excel / Google Sheets spreadsheet</span>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowExportMenu(false);
-                            window.print();
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <span className="text-base">🖨️</span>
-                          <div>
-                            <span className="block font-bold">Print / Save as PDF</span>
-                            <span className="text-[10px] text-slate-400 font-normal">Clean print-ready view</span>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleCopySummary}
-                          className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center gap-2.5 cursor-pointer"
-                        >
-                          <span className="text-base">📋</span>
-                          <div>
-                            <span className="block font-bold">Copy Summary</span>
-                            <span className="text-[10px] text-slate-400 font-normal">Copy quick text report</span>
-                          </div>
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Dedicated Monthly Data Export Banner in Analysis Section */}
-            <div className="p-4 sm:p-5 rounded-3xl border border-indigo-200/80 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/70 via-purple-50/40 to-slate-50/60 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block font-display">
-                  Monthly Financial Export
-                </span>
-                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
-                  Download {monthName} Data
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Export complete records of all {monthExpenses.length} transactions, category breakdowns, and net balances.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <button
-                  type="button"
-                  onClick={handleDownloadCSV}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer"
-                >
-                  <span>📊</span>
-                  <span>Download CSV</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-2 cursor-pointer"
-                >
-                  <span>🖨️</span>
-                  <span>Print / PDF</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCopySummary}
-                  className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-xs font-bold shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer"
-                  title="Copy text summary"
-                >
-                  <span>📋</span>
-                  <span>Copy</span>
-                </button>
+                ))}
               </div>
             </div>
 
@@ -1271,6 +1158,49 @@ export default function Expenditure({ onNavigate }) {
                     No reasons logged yet for this month.
                   </div>
                 )}
+              </div>
+            </section>
+
+            {/* Download Option at the BOTTOM of Analysis Tab */}
+            <section className="p-5 sm:p-6 rounded-3xl border border-indigo-200/80 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/70 via-purple-50/40 to-slate-50/60 dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-slate-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-5 shadow-sm">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block font-display">
+                  Monthly Financial Export
+                </span>
+                <h3 className="text-base sm:text-lg font-black font-display text-slate-900 dark:text-white">
+                  Download {monthName} Expenditure Report
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Export complete records of all {monthExpenses.length} transactions, category breakdowns, and net balances.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleDownloadCSV}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md shadow-indigo-500/20 active:scale-95 transition flex items-center gap-2 cursor-pointer min-h-[40px]"
+                >
+                  <span className="text-sm">📊</span>
+                  <span>Download CSV</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-black shadow-sm active:scale-95 transition flex items-center gap-2 cursor-pointer min-h-[40px]"
+                >
+                  <span className="text-sm">🖨️</span>
+                  <span>Print / Save PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopySummary}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-xs font-black shadow-sm active:scale-95 transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+                  title="Copy text summary"
+                >
+                  <span className="text-sm">📋</span>
+                  <span>Copy Summary</span>
+                </button>
               </div>
             </section>
           </div>
