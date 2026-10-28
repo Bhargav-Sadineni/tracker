@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { COLOR_PALETTE, CATEGORIES } from '../lib/constants';
+import { CATEGORIES } from '../lib/constants';
+import ColorPicker from './ColorPicker';
 import { ymd, addDays, getDaysLeft, formatDuration } from '../lib/api';
 
 export default function EditActivityModal({ activity, activities = [], onClose, onSave }) {
@@ -151,36 +152,16 @@ export default function EditActivityModal({ activity, activities = [], onClose, 
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Category & Color */}
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-                Color
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {COLOR_PALETTE.map((c) => (
-                  <button
-                    key={c.hex}
-                    type="button"
-                    onClick={() => up('color')(c.hex)}
-                    style={{ backgroundColor: c.hex }}
-                    className={`h-7 w-7 rounded-full transition-transform hover:scale-110 flex items-center justify-center ${
-                      f.color === c.hex ? 'ring-2 ring-offset-2 ring-slate-900 dark:ring-white scale-110' : 'opacity-80'
-                    }`}
-                  >
-                    {f.color === c.hex && <span className="text-white text-xs font-bold">✓</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                 Category
               </label>
               <select
                 value={f.category}
                 onChange={(e) => up('category')(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -188,6 +169,15 @@ export default function EditActivityModal({ activity, activities = [], onClose, 
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40">
+              <ColorPicker
+                value={f.color}
+                onChange={up('color')}
+                label="Habit Color & Theme"
+                helperText="Select a preset or enter/pick custom color"
+              />
             </div>
           </div>
 
