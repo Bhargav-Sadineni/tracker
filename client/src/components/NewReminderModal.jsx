@@ -2,64 +2,6 @@ import { useState } from 'react';
 import { ymd, addDays, getDaysLeft } from '../lib/api';
 import ColorPicker from './ColorPicker';
 
-const REMINDER_PRESETS = [
-  {
-    icon: '💻',
-    label: 'Online Assessment (OA)',
-    title: 'Online Assessment (OA)',
-    category: 'Exams & OA',
-    color: '#6366f1',
-    time: '18:00',
-    platform: 'HackerRank / HackerEarth',
-    description: 'Round 1 online coding assessment. Revise DSA, Arrays, Trees, DP.',
-    daysOffset: 0, // Today!
-  },
-  {
-    icon: '💼',
-    label: 'Technical Interview',
-    title: 'Technical Interview',
-    category: 'Career & Placement',
-    color: '#0ea5e9',
-    time: '14:00',
-    platform: 'Google Meet',
-    description: '1:1 technical interview with hiring engineer.',
-    daysOffset: 2,
-  },
-  {
-    icon: '🎓',
-    label: 'Semester Exam',
-    title: 'Semester Exam',
-    category: 'Academics',
-    color: '#f59e0b',
-    time: '10:00',
-    platform: 'Exam Hall',
-    description: 'Final examination. Bring admit card and stationary.',
-    daysOffset: 3,
-  },
-  {
-    icon: '📁',
-    label: 'Project Submission',
-    title: 'Project Submission',
-    category: 'Productivity',
-    color: '#10b981',
-    time: '23:59',
-    platform: 'GitHub / Portal',
-    description: 'Submit final report, clean repo code, and demo video link.',
-    daysOffset: 5,
-  },
-  {
-    icon: '💳',
-    label: 'Bill / Fee Due',
-    title: 'Bill Payment',
-    category: 'Finances & Bills',
-    color: '#ec4899',
-    time: '12:00',
-    platform: 'Payment Gateway',
-    description: 'Due date for monthly bill / fee installment.',
-    daysOffset: 7,
-  },
-];
-
 const REMINDER_CATEGORIES = [
   'Exams & OA',
   'Career & Placement',
@@ -79,17 +21,6 @@ export default function NewReminderModal({ onClose, onSave }) {
   const [category, setCategory] = useState('Exams & OA');
   const [color, setColor] = useState('#f59e0b');
   const [priority, setPriority] = useState('high');
-
-  const applyPreset = (p) => {
-    setTitle(p.title);
-    setDate(ymd(addDays(p.daysOffset)));
-    setTime(p.time || '');
-    setPlatform(p.platform || '');
-    setDescription(p.description || '');
-    setCategory(p.category || 'Exams & OA');
-    setColor(p.color || '#f59e0b');
-    setPriority('high');
-  };
 
   const daysLeft = getDaysLeft(date);
 
@@ -140,30 +71,6 @@ export default function NewReminderModal({ onClose, onSave }) {
           >
             ✕
           </button>
-        </div>
-
-        {/* Quick Presets */}
-        <div>
-          <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
-            Quick Templates
-          </span>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none">
-            {REMINDER_PRESETS.map((p) => (
-              <button
-                key={p.label}
-                type="button"
-                onClick={() => applyPreset(p)}
-                className={`px-3 py-1.5 rounded-xl border text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  title === p.title
-                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 shadow-sm'
-                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                }`}
-              >
-                <span>{p.icon}</span>
-                <span>{p.label}</span>
-              </button>
-            ))}
-          </div>
         </div>
 
         <form onSubmit={submit} className="space-y-4 sm:space-y-5">

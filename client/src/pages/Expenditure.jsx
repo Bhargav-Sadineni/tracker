@@ -31,6 +31,20 @@ const CATEGORIES = [
   { name: 'General & Others', icon: '📝', color: '#64748b' },
 ];
 
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
 export default function Expenditure({ onNavigate }) {
   const today = useMemo(() => new Date(), []);
@@ -39,6 +53,8 @@ export default function Expenditure({ onNavigate }) {
   // Current selected month: YYYY-MM
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-11
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(today.getFullYear());
 
   // View mode: 'calendar' | 'analysis'
   const [viewMode, setViewMode] = useState('calendar');
@@ -84,6 +100,25 @@ export default function Expenditure({ onNavigate }) {
 
   useEffect(() => {
     loadExpenses();
+  }, []);
+
+  // Sync formDate whenever a day is selected
+  useEffect(() => {
+    if (selectedDayStr) {
+      setFormDate(selectedDayStr);
+    }
+  }, [selectedDayStr]);
+
+  // Close modals on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedDayStr(null);
+        setShowMonthPicker(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Change month helpers
@@ -501,9 +536,21 @@ export default function Expenditure({ onNavigate }) {
                 Monthly Expenditure
               </span>
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
-                  {monthName}
-                </h1>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPickerYear(currentYear);
+                    setShowMonthPicker(true);
+                  }}
+                  className="group inline-flex items-center gap-2 text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer text-left"
+                  title="Click to change month"
+                >
+                  <span>{monthName}</span>
+                  <span className="text-xs px-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:border-indigo-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/50 group-hover:text-indigo-600 font-bold transition flex items-center gap-1 shadow-sm">
+                    <span>Change</span>
+                    <span className="text-[10px]">▼</span>
+                  </span>
+                </button>
 
                 {/* Month Navigator Buttons */}
                 <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/80 p-0.5 text-xs font-bold">
@@ -996,22 +1043,28 @@ export default function Expenditure({ onNavigate }) {
 
       {/* 3. DAY DETAIL & ADD TRANSACTION MODAL / DRAWER (Exact match to diagram arrow) */}
       {selectedDayStr && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-2xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-4 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setSelectedDayStr(null)}
+        >
+          <div
+            className="w-full max-w-xl sm:max-w-2xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-5 sm:p-7 space-y-5 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5">
               <div>
                 <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block font-display">
                   Daily Spendings Log
                 </span>
-                <h3 className="text-lg sm:text-xl font-black font-display text-slate-900 dark:text-white">
+                <h3 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white">
                   {selectedDayData?.formattedDate}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedDayStr(null)}
-                className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center font-bold text-sm"
+                className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center font-bold text-sm transition"
               >
                 ✕
               </button>
@@ -1041,87 +1094,109 @@ export default function Expenditure({ onNavigate }) {
               </div>
             </div>
 
-            {/* Inline Add Transaction Form (amount, why, type as drawn in sketch) */}
-            <form onSubmit={handleCreateTransaction} className="p-3.5 sm:p-4 rounded-2xl border border-indigo-200/70 dark:border-indigo-900/50 bg-indigo-50/30 dark:bg-indigo-950/20 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <span>➕</span> Add Transaction on {selectedDayStr}
-                </span>
+            {/* Modern & Cleaner Add Transaction Form */}
+            <form onSubmit={handleCreateTransaction} className="p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-4 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-slate-200/60 dark:border-slate-700/60">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">➕</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    Add Transaction
+                  </span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-lg font-mono font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400">
+                    {formDate || selectedDayStr}
+                  </span>
+                </div>
+
                 {/* Type Switcher: Spend vs Income */}
-                <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-0.5 text-xs font-bold">
+                <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 text-xs font-bold shadow-inner">
                   <button
                     type="button"
                     onClick={() => setFormType('spend')}
-                    className={`px-2.5 py-1 rounded-lg transition ${
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                       formType === 'spend'
                         ? 'bg-rose-500 text-white font-extrabold shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
-                    💸 Spend
+                    <span>💸</span>
+                    <span>Spend</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormType('income')}
-                    className={`px-2.5 py-1 rounded-lg transition ${
+                    className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
                       formType === 'income'
                         ? 'bg-emerald-500 text-white font-extrabold shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
                     }`}
                   >
-                    💰 Income
+                    <span>💰</span>
+                    <span>Income</span>
                   </button>
                 </div>
               </div>
 
-              {/* Form Input Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                {/* Amount input */}
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                    Amount ({currency})
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">
-                      {currency}
-                    </span>
-                    <input
-                      type="number"
-                      step="any"
-                      min="0"
-                      placeholder="e.g. 50"
-                      value={formAmount}
-                      onChange={(e) => setFormAmount(e.target.value)}
-                      required
-                      className="w-full h-8 pl-6 pr-2.5 rounded-xl border text-xs font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
-                    />
-                  </div>
+              {/* Amount input & Quick Chips */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                  Amount ({currency}) *
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-2.5 text-base font-bold text-slate-400 select-none">
+                    {currency}
+                  </span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    placeholder="0.00"
+                    value={formAmount}
+                    onChange={(e) => setFormAmount(e.target.value)}
+                    required
+                    autoFocus
+                    className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-base font-black text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-sm"
+                  />
                 </div>
+                {/* Quick Amount Chips */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 mr-0.5">Quick:</span>
+                  {[50, 100, 200, 500, 1000, 2000].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setFormAmount(amt.toString())}
+                      className="px-2 py-0.5 rounded-lg text-[11px] font-bold border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition"
+                    >
+                      +{currency}{amt}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                {/* Why input (Matches sketch: "why for that ex: print, food, nana") */}
+              {/* Reason / Why & Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                    Why / Reason
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                    Reason / Why for this *
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. food, print, nana"
+                    placeholder="e.g. food, printout, grocery, rent"
                     value={formWhy}
                     onChange={(e) => setFormWhy(e.target.value)}
                     required
-                    className="w-full h-8 px-2.5 rounded-xl border text-xs font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-sm"
                   />
                 </div>
 
-                {/* Category selector */}
                 <div>
-                  <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                     Category
                   </label>
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full h-8 px-2 rounded-xl border text-xs font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition shadow-sm"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c.name} value={c.name}>
@@ -1132,13 +1207,29 @@ export default function Expenditure({ onNavigate }) {
                 </div>
               </div>
 
-              <div className="flex justify-end pt-1">
+              {/* Date & Submit Button */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase">Date:</label>
+                  <input
+                    type="date"
+                    value={formDate}
+                    onChange={(e) => setFormDate(e.target.value)}
+                    className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md active:scale-95 transition cursor-pointer"
+                  className={`px-6 py-2.5 rounded-xl text-xs font-extrabold text-white shadow-md transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 ${
+                    formType === 'income'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20'
+                      : 'bg-gradient-to-r from-rose-500 via-rose-600 to-pink-600 hover:from-rose-600 hover:to-pink-700 shadow-rose-500/20'
+                  }`}
                 >
-                  {formSubmitting ? 'Saving...' : `+ Add ${formType === 'income' ? 'Income' : 'Spend'}`}
+                  <span>{formType === 'income' ? '💰' : '💸'}</span>
+                  <span>{formSubmitting ? 'Saving...' : `Save ${formType === 'income' ? 'Income' : 'Spend'}`}</span>
                 </button>
               </div>
             </form>
@@ -1219,6 +1310,106 @@ export default function Expenditure({ onNavigate }) {
                 className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MONTH & YEAR PICKER MODAL */}
+      {showMonthPicker && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowMonthPicker(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl p-5 sm:p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block font-display">
+                  Change Month
+                </span>
+                <h3 className="text-base font-black font-display text-slate-900 dark:text-white">
+                  Monthly Horizon
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMonthPicker(false)}
+                className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center font-bold text-sm transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Year Selector */}
+            <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => setPickerYear((y) => y - 1)}
+                className="h-8 w-8 rounded-xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-100 dark:hover:bg-slate-600 shadow-sm flex items-center justify-center transition"
+                title="Previous Year"
+              >
+                ◀
+              </button>
+              <span className="text-lg font-black font-display text-slate-900 dark:text-white">
+                {pickerYear}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPickerYear((y) => y + 1)}
+                className="h-8 w-8 rounded-xl bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-100 dark:hover:bg-slate-600 shadow-sm flex items-center justify-center transition"
+                title="Next Year"
+              >
+                ▶
+              </button>
+            </div>
+
+            {/* 12 Months Grid */}
+            <div className="grid grid-cols-3 gap-2">
+              {MONTH_NAMES.map((mName, idx) => {
+                const isSelected = currentMonth === idx && currentYear === pickerYear;
+                const isThisMonth = today.getMonth() === idx && today.getFullYear() === pickerYear;
+                return (
+                  <button
+                    key={mName}
+                    type="button"
+                    onClick={() => {
+                      setCurrentMonth(idx);
+                      setCurrentYear(pickerYear);
+                      setShowMonthPicker(false);
+                    }}
+                    className={`py-3 px-2 rounded-2xl text-xs font-bold transition flex flex-col items-center justify-center cursor-pointer ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25 scale-[1.02]'
+                        : isThisMonth
+                        ? 'border-2 border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/60'
+                        : 'border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    <span>{mName.slice(0, 3)}</span>
+                    <span className="text-[10px] opacity-75 font-normal mt-0.5">
+                      {isThisMonth ? 'Current' : mName}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick jump to Today */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  handleGoToToday();
+                  setShowMonthPicker(false);
+                }}
+                className="w-full py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 transition text-center"
+              >
+                Jump to Current Month ({new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})
               </button>
             </div>
           </div>
