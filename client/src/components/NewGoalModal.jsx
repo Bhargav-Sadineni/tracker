@@ -4,9 +4,22 @@ import { COLOR_PALETTE, CATEGORIES } from '../lib/constants';
 
 const GOAL_PRESETS = [
   {
+    title: 'Complete OS (Operating Systems)',
+    description: 'Master core Operating System concepts: processes, memory, concurrency & storage',
+    category: 'Learning & Skills',
+    goalType: 'checkbox',
+    targetDays: 21,
+    currentValue: 0,
+    targetValue: 1,
+    unit: 'task',
+    color: '#6366f1',
+    milestones: ['Process Management & Threads', 'CPU Scheduling & Synchronization', 'Virtual Memory & Paging', 'File Systems & Storage'],
+  },
+  {
     title: 'Solve 100 DSA Problems',
     description: 'Master core data structures and algorithms for interviews',
     category: 'Learning & Skills',
+    goalType: 'numeric',
     targetDays: 30,
     currentValue: 0,
     targetValue: 100,
@@ -61,10 +74,11 @@ export default function NewGoalModal({ onClose, onSave }) {
     description: '',
     category: 'Learning & Skills',
     color: '#8b5cf6',
+    goalType: 'checkbox', // 'checkbox' (single tick box) or 'numeric' (counted progress)
     targetDate: defaultTarget,
     currentValue: 0,
-    targetValue: 100,
-    unit: 'problems',
+    targetValue: 1,
+    unit: 'task',
     priority: 'high',
     milestones: ['Phase 1 Checkpoint', 'Phase 2 Checkpoint'],
   });
@@ -81,6 +95,7 @@ export default function NewGoalModal({ onClose, onSave }) {
       description: p.description,
       category: p.category,
       color: p.color,
+      goalType: p.goalType || (p.targetValue === 1 ? 'checkbox' : 'numeric'),
       targetDate: ymd(d),
       currentValue: p.currentValue,
       targetValue: p.targetValue,
@@ -112,13 +127,15 @@ export default function NewGoalModal({ onClose, onSave }) {
       category: f.category,
       color: f.color,
       targetDate: f.targetDate,
-      currentValue: Number(f.currentValue) || 0,
-      targetValue: Number(f.targetValue) || 1,
-      unit: f.unit || 'tasks',
+      goalType: f.goalType || 'checkbox',
+      currentValue: f.goalType === 'checkbox' ? 0 : (Number(f.currentValue) || 0),
+      targetValue: f.goalType === 'checkbox' ? 1 : (Number(f.targetValue) || 1),
+      unit: f.goalType === 'checkbox' ? 'task' : (f.unit || 'tasks'),
       priority: f.priority,
       completed: false,
       milestones: f.milestones.map((m) => ({ title: m, done: false })),
     });
+    onClose();
   };
 
   return (
@@ -248,48 +265,109 @@ export default function NewGoalModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* Target Progress Values: Current vs Target */}
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Current Done
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={f.currentValue}
-                onChange={(e) => up('currentValue')(parseFloat(e.target.value) || 0)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-center font-bold text-slate-900 dark:text-white"
-              />
-            </div>
+          {/* Goal Type / Completion Mode Selector */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Completion Method
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  up('goalType')('checkbox');
+                  up('targetValue')(1);
+                  up('currentValue')(0);
+                  up('unit')('task');
+                }}
+                className={`p-3 rounded-2xl border flex items-center gap-2.5 text-left transition-all ${
+                  f.goalType === 'checkbox'
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                }`}
+              >
+                <span className="text-xl shrink-0">☑️</span>
+                <div>
+                  <div className="font-extrabold text-xs">Simple Tick Box</div>
+                  <div className="text-[10px] opacity-75">e.g. Complete OS, Build Portfolio</div>
+                </div>
+              </button>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Target Value
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={f.targetValue}
-                onChange={(e) => up('targetValue')(parseFloat(e.target.value) || 1)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-center font-bold text-slate-900 dark:text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                Unit / Metric
-              </label>
-              <input
-                type="text"
-                value={f.unit}
-                onChange={(e) => up('unit')(e.target.value)}
-                placeholder="problems, kg, pages"
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-center font-medium text-slate-900 dark:text-white"
-              />
+              <button
+                type="button"
+                onClick={() => {
+                  up('goalType')('numeric');
+                  if (f.targetValue <= 1) {
+                    up('targetValue')(100);
+                    up('unit')('problems');
+                  }
+                }}
+                className={`p-3 rounded-2xl border flex items-center gap-2.5 text-left transition-all ${
+                  f.goalType === 'numeric'
+                    ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20 shadow-sm'
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                }`}
+              >
+                <span className="text-xl shrink-0">🔢</span>
+                <div>
+                  <div className="font-extrabold text-xs">Numeric Progress Count</div>
+                  <div className="text-[10px] opacity-75">e.g. Solve 100 Problems, Read 5 Books</div>
+                </div>
+              </button>
             </div>
           </div>
+
+          {/* Target Progress Values: Conditional on Checkbox vs Numeric */}
+          {f.goalType === 'checkbox' ? (
+            <div className="p-3.5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200/70 dark:border-indigo-900/40 flex items-center gap-2.5 text-xs text-indigo-900 dark:text-indigo-300">
+              <span className="text-lg">☑️</span>
+              <div>
+                <span className="font-bold">Tick Box Mode Active: </span>
+                <span>You can mark this goal completed anytime with a single click on the tick box!</span>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                  Current Done
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={f.currentValue}
+                  onChange={(e) => up('currentValue')(parseFloat(e.target.value) || 0)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-center font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                  Target Value
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  value={f.targetValue}
+                  onChange={(e) => up('targetValue')(parseFloat(e.target.value) || 1)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-center font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                  Unit / Metric
+                </label>
+                <input
+                  type="text"
+                  value={f.unit}
+                  onChange={(e) => up('unit')(e.target.value)}
+                  placeholder="problems, kg, pages"
+                  className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-center font-medium text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Category & Color */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

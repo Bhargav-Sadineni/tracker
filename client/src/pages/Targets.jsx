@@ -120,12 +120,14 @@ export default function Targets({ onNavigate, onSelectActivity }) {
       const days = getDaysLeft(g.targetDate);
       const isReminder = g.kind === 'reminder';
       const isOA = isReminder && (g.title.toLowerCase().includes('oa') || (g.category && g.category.toLowerCase().includes('oa')));
+      const isCheckboxGoal = !isReminder && (g.goalType === 'checkbox' || g.targetValue === 1 || g.unit === 'task' || g.unit === 'checkbox' || g.unit === 'tickbox');
       list.push({
         id: g._id,
         key: `goal_${g._id}`,
         isActivity: false,
         itemType: isReminder ? 'reminder' : 'goal',
-        typeBadge: isReminder ? (isOA ? '💻 Online Assessment (OA)' : '🔔 Reminder') : '🎯 Specific Goal',
+        goalType: isCheckboxGoal ? 'checkbox' : (g.goalType || 'numeric'),
+        typeBadge: isReminder ? (isOA ? '💻 Online Assessment (OA)' : '🔔 Reminder') : (isCheckboxGoal ? '☑️ Target Task' : '🎯 Specific Goal'),
         title: g.title,
         description: g.description,
         category: g.category || (isReminder ? 'Exams & OA' : 'General'),
@@ -136,8 +138,8 @@ export default function Targets({ onNavigate, onSelectActivity }) {
         daysLeft: days,
         completed: !!g.completed,
         currentValue: isReminder ? (g.completed ? 1 : 0) : (g.currentValue || 0),
-        targetValue: isReminder ? 1 : (g.targetValue || 1),
-        unit: isReminder ? 'reminder' : (g.unit || ''),
+        targetValue: isReminder || isCheckboxGoal ? 1 : (g.targetValue || 1),
+        unit: isReminder ? 'reminder' : isCheckboxGoal ? 'task' : (g.unit || ''),
         raw: g,
       });
     });
@@ -720,6 +722,8 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                           ? item.challengeInfo.label
                           : item.itemType === 'specific_habit'
                           ? (item.completed ? '✓ Completed' : 'Pending Payment / Check')
+                          : item.goalType === 'checkbox'
+                          ? (item.completed ? '✓ Completed' : 'Pending Completion')
                           : `${item.currentValue} / ${item.targetValue} ${item.unit} (${pct}%)`}
                       </span>
                     </div>
@@ -728,7 +732,7 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{
-                          width: `${item.itemType === 'specific_habit' ? (item.completed ? 100 : 0) : pct}%`,
+                          width: `${item.itemType === 'specific_habit' || item.goalType === 'checkbox' ? (item.completed ? 100 : 0) : pct}%`,
                           backgroundColor: item.color || '#8b5cf6',
                         }}
                       />
@@ -766,35 +770,78 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                       </button>
                     </div>
                   ) : !item.isActivity ? (
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => updateGoal(item.id, { currentValue: Math.max(0, (item.currentValue || 0) - 1) })}
-                        className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
-                        -
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextVal = (item.currentValue || 0) + 1;
-                          updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
-                        }}
-                        className="h-7 w-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-xs font-bold text-white shadow-sm"
-                      >
-                        +
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextVal = (item.currentValue || 0) + 5;
-                          updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
-                        }}
-                        className="px-2 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 text-xs font-bold"
-                      >
-                        +5
-                      </button>
-                    </div>
+                    item.goalType === 'checkbox' ? (
+                      /* Checkbox / Single Tick Box Goal (e.g. Complete OS) */
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextDone = !item.completed;
+                            updateGoal(item.id, {
+                              completed: nextDone,
+                              currentValue: nextDone ? 1 : 0,
+                            });
+                            if (nextDone) triggerConfetti();
+                          }}
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm active:scale-95 ${
+                            item.completed
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300'
+                              : 'bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white'
+                          }`}
+                        >
+                          <span
+                            className={`h-4 w-4 rounded-md border flex items-center justify-center text-xs font-black transition-all ${
+                              item.completed
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'border-white/80 bg-white/20 text-transparent'
+                            }`}
+                          >
+                            ✓
+                          </span>
+                          <span>{item.completed ? 'Completed' : 'Mark as Done'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => deleteGoal(item.id)}
+                          className="h-8 w-8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center justify-center text-xs transition"
+                          title="Delete Goal"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    ) : (
+                      /* Numeric Progress Goal */
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => updateGoal(item.id, { currentValue: Math.max(0, (item.currentValue || 0) - 1) })}
+                          className="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                          -
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextVal = (item.currentValue || 0) + 1;
+                            updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
+                          }}
+                          className="h-7 w-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextVal = (item.currentValue || 0) + 5;
+                            updateGoal(item.id, { currentValue: nextVal, completed: nextVal >= item.targetValue });
+                          }}
+                          className="px-2 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 hover:bg-indigo-200 text-indigo-700 dark:text-indigo-300 text-xs font-bold"
+                        >
+                          +5
+                        </button>
+                      </div>
+                    )
                   ) : (
                     /* Time-bound Habit: Mark Completed / Paid toggle button */
                     <button

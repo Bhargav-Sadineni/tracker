@@ -14,6 +14,7 @@ const GoalSchema = new mongoose.Schema({
   time: { type: String, default: '' },          // e.g. '18:00' or '10:30 AM' for OAs, tests, interviews
   link: { type: String, default: '' },          // optional URL or platform (e.g. HackerRank / Google Meet)
   kind: { type: String, enum: ['goal', 'reminder'], default: 'goal' }, // 'goal' or 'reminder'
+  goalType: { type: String, enum: ['checkbox', 'numeric'], default: 'numeric' }, // 'checkbox' (tick box) or 'numeric' (counted progress)
   currentValue: { type: Number, default: 0 },
   targetValue: { type: Number, default: 100 },
   unit: { type: String, default: 'tasks' },      // e.g. 'problems', 'pages', 'kg', 'hours', 'reps', '%'

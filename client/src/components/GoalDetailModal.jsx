@@ -151,20 +151,22 @@ export default function GoalDetailModal({ goal, onClose, onUpdate, onDelete }) {
             </span>
           </div>
 
-          {g.kind === 'reminder' ? (
+          {g.kind === 'reminder' || g.goalType === 'checkbox' || g.targetValue === 1 ? (
             <div className="py-2 flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Status:</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {g.kind === 'reminder' ? 'Status:' : 'Tick Box Completion:'}
+              </span>
               <button
                 type="button"
                 onClick={() => saveUpdates({ completed: !g.completed, currentValue: g.completed ? 0 : 1 })}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
                   g.completed
                     ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300'
-                    : 'bg-amber-500 hover:bg-amber-600 text-white shadow-md'
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md active:scale-95'
                 }`}
               >
                 <span>{g.completed ? '✓' : '○'}</span>
-                <span>{g.completed ? 'Attended / Completed' : 'Mark as Attended / Done'}</span>
+                <span>{g.completed ? 'Completed' : 'Mark as Done (Tick Box)'}</span>
               </button>
             </div>
           ) : (
