@@ -537,13 +537,20 @@ export default function Expenditure({ onNavigate }) {
         <div className="w-full max-w-[1700px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Brand & Tabs */}
           <div className="flex items-center justify-between sm:justify-start gap-4 flex-wrap">
-            <div>
-              <span className="font-black text-2xl sm:text-3xl font-display tracking-tight text-slate-900 dark:text-white">
-                Tracker
-              </span>
-              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
-                Monthly Expenditure &amp; Financial Analytics
-              </p>
+            <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+              <div>
+                <span className="font-black text-2xl sm:text-3xl font-display tracking-tight text-slate-900 dark:text-white">
+                  Tracker
+                </span>
+                <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">
+                  Monthly Expenditure &amp; Financial Analytics
+                </p>
+              </div>
+
+              {/* Mobile Top-Right: Dark Mode Toggle */}
+              <div className="sm:hidden flex items-center shrink-0">
+                <ThemeToggle />
+              </div>
             </div>
 
             {/* Navigation Tabs (Desktop only - Mobile uses bottom dock) */}
@@ -575,8 +582,11 @@ export default function Expenditure({ onNavigate }) {
           </div>
 
           {/* Header Controls: Theme Toggle & Quick Add Transaction */}
-          <div className="flex items-center gap-2.5 self-end sm:self-auto flex-wrap">
-            <ThemeToggle />
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end sm:justify-start flex-wrap">
+            {/* Desktop Theme Toggle (Laptop Only) */}
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
 
             {/* Quick Add Transaction Button */}
             <button
@@ -585,7 +595,7 @@ export default function Expenditure({ onNavigate }) {
                 setFormDate(todayStr);
                 setSelectedDayStr(todayStr);
               }}
-              className="px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center gap-1.5 cursor-pointer min-h-[40px]"
+              className="w-full sm:w-auto px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-md shadow-emerald-500/20 active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px]"
             >
               <span className="text-sm leading-none">+</span>
               <span>Add Transaction</span>

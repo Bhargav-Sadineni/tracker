@@ -573,8 +573,8 @@ export default function Targets({ onNavigate, onSelectActivity }) {
       {/* Top Navbar */}
       <header className="sticky top-0 z-30 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md px-3.5 sm:px-8 py-3 transition-colors">
         <div className="w-full max-w-[1700px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Brand & Navigation Tabs */}
-          <div className="flex items-center justify-between sm:justify-start gap-4">
+          {/* Brand, Navigation Tabs & Mobile Top-Right Dark Mode Toggle */}
+          <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
             <div className="flex items-center gap-2.5">
               <div>
                 <span className="font-black text-2xl sm:text-3xl font-display tracking-tight text-slate-900 dark:text-white">
@@ -616,15 +616,24 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                 <span>Monthly Expenditure</span>
               </button>
             </div>
+
+            {/* Mobile Top-Right: Dark Mode Toggle */}
+            <div className="sm:hidden flex items-center shrink-0">
+              <ThemeToggle />
+            </div>
           </div>
 
           {/* Header Action Buttons */}
-          <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
-            <ThemeToggle />
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end sm:justify-start flex-wrap">
+            {/* Desktop Theme Toggle (Laptop Only) */}
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
+
             <button
               type="button"
               onClick={() => setShowNewReminderModal(true)}
-              className="px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-xs font-black shadow-md shadow-amber-500/25 active:scale-95 transition flex items-center gap-1.5 min-h-[40px]"
+              className="w-full sm:w-auto px-4 py-2 sm:px-3.5 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white text-xs font-black shadow-md shadow-amber-500/25 active:scale-95 transition flex items-center justify-center gap-1.5 min-h-[40px]"
             >
               <span>🔔</span>
               <span>+ Add Reminder</span>

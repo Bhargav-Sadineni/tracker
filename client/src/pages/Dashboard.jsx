@@ -402,17 +402,17 @@ export default function Dashboard({ onSelectActivity, onNavigate }) {
               </button>
             </nav>
 
-            {/* Mobile-only Header Action: Prominent, larger New Habit button */}
+            {/* Mobile-only Header Action: New Habit button + Top-Right Theme Toggle */}
             <div className="sm:hidden flex items-center gap-2">
-              <ThemeToggle />
               <button
                 onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-black text-white shadow-md shadow-indigo-600/30 active:scale-95 transition min-h-[40px]"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-1.5 text-xs font-black text-white shadow-md shadow-indigo-600/30 active:scale-95 transition min-h-[38px]"
                 title="Create New Habit"
               >
                 <span className="text-base font-black leading-none">+</span>
                 <span>New Habit</span>
               </button>
+              <ThemeToggle />
             </div>
           </div>
 
