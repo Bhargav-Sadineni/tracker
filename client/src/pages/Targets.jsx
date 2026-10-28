@@ -514,99 +514,95 @@ export default function Targets({ onNavigate, onSelectActivity }) {
             </button>
           </div>
 
-          {/* Row 2: Status Tabs, Category & Search */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            {/* Status Tabs */}
-            <div className="flex items-center overflow-x-auto gap-1 pb-1 lg:pb-0 scrollbar-none">
-              <button
-                type="button"
-                onClick={() => setFilterStatus('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                  filterStatus === 'all'
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                All Status
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterStatus('in_progress')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                  filterStatus === 'in_progress'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                ⏳ Active ({activeTargets.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterStatus('urgent')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                  filterStatus === 'urgent'
-                    ? 'bg-rose-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                🚨 Urgent ({urgentTargets.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterStatus('completed')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
-                  filterStatus === 'completed'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                ✓ Completed ({completedTargets.length})
-              </button>
+          {/* Row 2: Status Tabs */}
+          <div className="flex items-center overflow-x-auto gap-1.5 pb-1 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setFilterStatus('all')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                filterStatus === 'all'
+                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              All Status
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterStatus('in_progress')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                filterStatus === 'in_progress'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              ⏳ Active ({activeTargets.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterStatus('urgent')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                filterStatus === 'urgent'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              🚨 Urgent ({urgentTargets.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterStatus('completed')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+                filterStatus === 'completed'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+              }`}
+            >
+              ✓ Completed ({completedTargets.length})
+            </button>
+          </div>
+
+          {/* Row 3: Category Pills & Full-Width / Large Search Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+            {/* Category Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+              {allCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilterCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                    filterCategory === cat
+                      ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
 
-            {/* Category Pills & Search */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
-                {allCategories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setFilterCategory(cat)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                      filterCategory === cat
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative flex-1 sm:w-56">
-                <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search targets, OA, EMI..."
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/90 pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
+            {/* Generous Width Search Bar */}
+            <div className="relative w-full sm:w-80 md:w-96">
+              <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 text-xs">🔍</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search targets, OA, EMI, tasks..."
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/90 pl-8 pr-8 py-2 text-xs font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs"
+                  title="Clear search"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
-        </div>
-
-        {/* Strict Ordering Banner Notice */}
-        <div className="px-4 py-2 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-300">
-          <div className="flex items-center gap-2">
-            <span>⏱️</span>
-            <span className="font-semibold">
-              Strict Time-Remaining Order: Tasks with less time left appear first (e.g. 2 days away task strictly precedes 10 days away task).
-            </span>
-          </div>
-          <span className="font-bold text-[11px] shrink-0">
-            {sortedFilteredTargets.length} Targets Sorted
-          </span>
         </div>
 
         {/* Targets Cards Grid */}
