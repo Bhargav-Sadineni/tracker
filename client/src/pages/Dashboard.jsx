@@ -31,7 +31,26 @@ export default function Dashboard({ onSelectActivity, onNavigate }) {
   const [showInsights, setShowInsights] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [dayRange, setDayRange] = useState(14);
+  const [dayRange, setDayRange] = useState(() => {
+    try {
+      const saved = localStorage.getItem('habitTracker_dayRange');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if ([7, 14, 21, 30].includes(parsed)) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return 7;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('habitTracker_dayRange', String(dayRange));
+    } catch {
+      // ignore
+    }
+  }, [dayRange]);
   const [filterCategory, setFilterCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('auto'); // 'auto', 'cards', 'table'
@@ -400,6 +419,15 @@ export default function Dashboard({ onSelectActivity, onNavigate }) {
                 <span>💳</span>
                 <span>Monthly Expenditure</span>
               </button>
+              <button
+                type="button"
+                onClick={() => onNavigate && onNavigate('daily-log')}
+                className="px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+                title="Switch to Daily Log"
+              >
+                <span>📝</span>
+                <span>Daily Log</span>
+              </button>
             </nav>
 
             {/* Mobile-only Header Action: New Habit button + Top-Right Theme Toggle */}
@@ -424,6 +452,7 @@ export default function Dashboard({ onSelectActivity, onNavigate }) {
                 { label: '7D', value: 7 },
                 { label: '14D', value: 14 },
                 { label: '21D', value: 21 },
+                { label: '30D', value: 30 },
               ].map((r) => (
                 <button
                   key={r.value}

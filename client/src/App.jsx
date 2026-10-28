@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import Dashboard from './pages/Dashboard';
 import Targets from './pages/Targets';
 import Expenditure from './pages/Expenditure';
+import DailyLog from './pages/DailyLog';
 import Detail from './pages/Detail';
 import MobileNav from './components/MobileNav';
 import { api } from './lib/api';
 
 export default function App() {
-  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'targets' | 'expenditure'
+  const [page, setPage] = useState('dashboard'); // 'dashboard' | 'targets' | 'expenditure' | 'daily-log'
   const [selected, setSelected] = useState(null);
   const [activeTargetsCount, setActiveTargetsCount] = useState(0);
 
@@ -53,6 +54,11 @@ export default function App() {
       )}
       {page === 'expenditure' && (
         <Expenditure
+          onNavigate={(p) => setPage(p)}
+        />
+      )}
+      {page === 'daily-log' && (
+        <DailyLog
           onNavigate={(p) => setPage(p)}
         />
       )}

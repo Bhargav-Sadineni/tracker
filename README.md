@@ -1,10 +1,11 @@
-# Tracker 🎯📊💳
+# Tracker 🎯📊💳📝
 
 An all-in-one personal productivity system combining:
 1. **Habits Matrix**: Daily positive routines & negative limits, custom metrics (checkbox, duration, counts, time of day, sleep/wake), historical heatmap, and measurable performance bar charts.
 2. **Targets & Deadlines**: Goal countdowns, strict time-remaining ordering, and reminders (e.g., Online Assessments / OAs, Exams, EMI payments).
 3. **Monthly Expenditure**: Comprehensive financial management in Indian Rupees (`₹`), calendar spend matrix showing total spend on each day, and multi-horizon comparisons (1M, 3M, 1Y).
-4. **Mobile First (iPhone 17 Optimized)**: Clean mobile layout with a floating 3-option bottom dock (`Habits`, `Targets`, `Expenditure`) and 3-day touch check-in cards with tactile spring micro-animations.
+4. **Daily Log & Journal**: A dedicated daily diary where you write what you accomplished, track mood and 5-star productivity rating, record key wins, tag focus areas, and 1-click import completed habits and expenses for that day.
+5. **Mobile First (iPhone 17 & Android Optimized)**: Clean mobile layout with a floating 4-option bottom dock (`Habits`, `Targets`, `Expenditure`, `Daily Log`) and responsive desktop navigation.
 
 ---
 

@@ -12,6 +12,7 @@ app.use('/api/activities', require('./routes/activities'));
 app.use('/api/entries', require('./routes/entries'));
 app.use('/api/goals', require('./routes/goals'));
 app.use('/api/expenses', require('./routes/expenses'));
+app.use('/api/daily-logs', require('./routes/dailyLogs'));
 
 app.use(errorHandler);
 

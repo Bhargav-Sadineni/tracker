@@ -615,6 +615,15 @@ export default function Targets({ onNavigate, onSelectActivity }) {
                 <span>💳</span>
                 <span>Monthly Expenditure</span>
               </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('daily-log')}
+                className="px-3 py-1.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+                title="Switch to Daily Log"
+              >
+                <span>📝</span>
+                <span>Daily Log</span>
+              </button>
             </div>
 
             {/* Mobile Top-Right: Dark Mode Toggle */}
