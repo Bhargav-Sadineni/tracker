@@ -17,6 +17,7 @@ import {
 } from 'recharts';
 import { api, ymd } from '../lib/api';
 import ThemeToggle from '../components/ThemeToggle';
+import CategoryDrilldownModal from '../components/CategoryDrilldownModal';
 
 const CATEGORIES = [
   { name: 'Food & Dining', icon: '🍔', color: '#f59e0b' },
@@ -69,6 +70,9 @@ export default function Expenditure({ onNavigate }) {
   // Selected Day modal/drawer state
   const [selectedDayStr, setSelectedDayStr] = useState(null);
 
+  // Category drilldown modal state
+  const [drilldownCategory, setDrilldownCategory] = useState(null);
+
   // New Transaction Form State (for modal or quick add)
   const [formAmount, setFormAmount] = useState('');
   const [formWhy, setFormWhy] = useState('');
@@ -116,6 +120,7 @@ export default function Expenditure({ onNavigate }) {
       if (e.key === 'Escape') {
         setSelectedDayStr(null);
         setShowMonthPicker(false);
+        setDrilldownCategory(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -279,6 +284,18 @@ export default function Expenditure({ onNavigate }) {
       setExpenses((prev) => prev.filter((x) => x._id !== id));
     } catch (err) {
       console.error('Failed to delete transaction', err);
+    }
+  };
+
+  // Add transaction from category drilldown modal
+  const handleAddTransactionFromDrilldown = async (txnData) => {
+    try {
+      const created = await api('/expenses', 'POST', txnData);
+      setExpenses((prev) => [created, ...prev]);
+      return created;
+    } catch (err) {
+      console.error('Failed to create transaction from drilldown', err);
+      throw err;
     }
   };
 
@@ -1075,67 +1092,142 @@ export default function Expenditure({ onNavigate }) {
 
               {/* Chart 3: Category Pie Chart */}
               <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 p-4 sm:p-6 shadow-sm space-y-4">
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold font-display text-slate-900 dark:text-white">
-                    🥧 Spending Categories Breakdown
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Distribution of where your money goes this month
-                  </p>
+                <div className="flex items-start justify-between flex-wrap gap-2">
+                  <div>
+                    <h3 className="text-sm sm:text-base font-bold font-display text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span>🥧</span> Spending Categories Breakdown
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Distribution of where your money goes this month. Click any category to open why reasons &amp; plot.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800 shadow-sm flex items-center gap-1">
+                    <span>🔍</span> Click category to drill down
+                  </span>
                 </div>
 
                 {categoryPieData.length > 0 ? (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-                    <div className="h-56 w-56 relative flex-shrink-0">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={categoryPieData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={50}
-                            outerRadius={80}
-                            paddingAngle={3}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="h-56 w-56 relative flex-shrink-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={categoryPieData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={50}
+                              outerRadius={80}
+                              paddingAngle={3}
+                              className="cursor-pointer select-none"
+                              onClick={(entry) => {
+                                if (entry && entry.name) {
+                                  setDrilldownCategory(entry.name);
+                                }
+                              }}
+                            >
+                              {categoryPieData.map((entry, index) => (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={entry.color}
+                                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                                  onClick={() => setDrilldownCategory(entry.name)}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              content={({ active, payload }) => {
+                                if (active && payload && payload.length) {
+                                  const d = payload[0].payload;
+                                  return (
+                                    <div className="rounded-xl bg-slate-900 text-white p-2.5 shadow-xl text-xs space-y-1 border border-slate-700">
+                                      <div className="font-bold flex items-center gap-1.5">
+                                        <span
+                                          className="h-2 w-2 rounded-full"
+                                          style={{ backgroundColor: d.color }}
+                                        />
+                                        <span>{d.name}</span>
+                                      </div>
+                                      <div className="text-rose-400 font-black">
+                                        {currency}{d.value.toLocaleString()} ({d.pct}%)
+                                      </div>
+                                      <div className="text-indigo-400 text-[10px] font-semibold pt-0.5 border-t border-slate-800">
+                                        🔍 Click to open why reasons &amp; plot
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Category Legend List */}
+                      <div className="flex-1 w-full space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                        {categoryPieData.map((cat) => (
+                          <button
+                            type="button"
+                            key={cat.name}
+                            onClick={() => setDrilldownCategory(cat.name)}
+                            className="w-full flex items-center justify-between text-xs p-2 rounded-xl hover:bg-indigo-50/80 dark:hover:bg-slate-800 transition cursor-pointer group text-left border border-transparent hover:border-indigo-200 dark:hover:border-indigo-900/50"
+                            title={`Click to open ${cat.name} why reasons & plots`}
                           >
-                            {categoryPieData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            formatter={(val) => [`${currency}${val.toLocaleString()}`, 'Spent']}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                            <div className="flex items-center gap-2 truncate">
+                              <span
+                                className="h-2.5 w-2.5 rounded-full flex-shrink-0 group-hover:scale-125 transition-transform"
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              <span className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition truncate">
+                                {cat.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 font-black flex-shrink-0">
+                              <span className="text-slate-900 dark:text-white">
+                                {currency}{cat.value.toLocaleString()}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-bold min-w-[32px] text-right">
+                                {cat.pct}%
+                              </span>
+                              <span className="text-indigo-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity text-xs ml-0.5">
+                                ➜
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
-                    {/* Category Legend List */}
-                    <div className="flex-1 w-full space-y-1.5 max-h-56 overflow-y-auto pr-1">
-                      {categoryPieData.map((cat) => (
-                        <div
-                          key={cat.name}
-                          className="flex items-center justify-between text-xs p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <span
-                              className="h-2.5 w-2.5 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: cat.color }}
-                            />
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
-                              {cat.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 font-black flex-shrink-0">
-                            <span className="text-slate-900 dark:text-white">
-                              {currency}{cat.value.toLocaleString()}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-bold min-w-[32px] text-right">
-                              {cat.pct}%
-                            </span>
-                          </div>
-                        </div>
-                      ))}
+                    {/* Quick Category Chips for Fast Access */}
+                    <div className="w-full pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-thin">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap mr-1">
+                          Drill into:
+                        </span>
+                        {CATEGORIES.map((c) => {
+                          const hasData = categoryPieData.some(
+                            (cd) => cd.name.toLowerCase() === c.name.toLowerCase()
+                          );
+                          return (
+                            <button
+                              key={c.name}
+                              type="button"
+                              onClick={() => setDrilldownCategory(c.name)}
+                              className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1 border ${
+                                hasData
+                                  ? 'border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'
+                                  : 'border-slate-200/60 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-slate-500 dark:text-slate-400 hover:border-slate-300'
+                              }`}
+                            >
+                              <span>{c.icon}</span>
+                              <span>{c.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -1148,30 +1240,52 @@ export default function Expenditure({ onNavigate }) {
 
             {/* Top Reasons / "Why" Ranking Section (Matches "why" column in sketch) */}
             <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 p-4 sm:p-6 shadow-sm space-y-3">
-              <h3 className="text-sm sm:text-base font-bold font-display text-slate-900 dark:text-white flex items-center gap-2">
-                <span>🏷️</span> Top Spending Reasons &amp; Notes
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Highest aggregated expenses by reason (e.g. food, print, nana)
-              </p>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold font-display text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>🏷️</span> Top Spending Reasons &amp; Notes
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Highest aggregated expenses by reason. Click any reason card to open its category breakdown.
+                  </p>
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-2">
-                {topWhyList.map((item, idx) => (
-                  <div
-                    key={item.why}
-                    className="p-3 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40"
-                  >
-                    <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                      #{idx + 1} Reason
-                    </span>
-                    <span className="text-base font-extrabold text-slate-900 dark:text-white font-display capitalize block mt-0.5 truncate">
-                      {item.why}
-                    </span>
-                    <span className="text-xs font-black text-rose-500 font-display block mt-1">
-                      {currency}{item.amount.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
+                {topWhyList.map((item, idx) => {
+                  const matchingTxn = monthExpenses.find(
+                    (e) => (e.why || '').trim().toLowerCase() === item.why.toLowerCase()
+                  );
+                  const matchedCat = matchingTxn?.category || 'General & Others';
+                  return (
+                    <div
+                      key={item.why}
+                      onClick={() => setDrilldownCategory(matchedCat)}
+                      className="p-3 rounded-2xl border border-slate-200/70 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-indigo-300 dark:hover:border-indigo-700 transition cursor-pointer group"
+                      title={`Click to open ${matchedCat} drilldown`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                          #{idx + 1} Reason
+                        </span>
+                        <span className="text-[10px] text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">
+                          Inspect ➜
+                        </span>
+                      </div>
+                      <span className="text-base font-extrabold text-slate-900 dark:text-white font-display capitalize block mt-0.5 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition">
+                        {item.why}
+                      </span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs font-black text-rose-500 font-display">
+                          {currency}{item.amount.toLocaleString()}
+                        </span>
+                        <span className="text-[9px] text-slate-400 font-semibold truncate max-w-[70px]">
+                          {matchedCat}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
                 {topWhyList.length === 0 && (
                   <div className="col-span-full py-4 text-center text-xs text-slate-400">
                     No reasons logged yet for this month.
@@ -1446,9 +1560,15 @@ export default function Expenditure({ onNavigate }) {
                             <span className="text-sm font-extrabold text-slate-900 dark:text-white capitalize block">
                               {item.why}
                             </span>
-                            <span className="text-[10px] text-slate-400 font-semibold">
-                              {item.category || 'General'}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setDrilldownCategory(item.category || 'General & Others')}
+                              className="text-[10px] text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer transition text-left"
+                              title="Click to view category breakdown & why reasons"
+                            >
+                              <span>{item.category || 'General'}</span>
+                              <span className="text-[9px]">🔍</span>
+                            </button>
                           </div>
                         </div>
 
@@ -1599,6 +1719,22 @@ export default function Expenditure({ onNavigate }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 5. CATEGORY DRILLDOWN & WHY REASONS MODAL */}
+      {drilldownCategory && (
+        <CategoryDrilldownModal
+          categoryName={drilldownCategory}
+          categories={CATEGORIES}
+          expenses={expenses}
+          monthName={monthName}
+          monthStr={monthStr}
+          currency={currency}
+          onClose={() => setDrilldownCategory(null)}
+          onSelectCategory={(newCat) => setDrilldownCategory(newCat)}
+          onDeleteTransaction={handleDeleteTransaction}
+          onAddTransaction={handleAddTransactionFromDrilldown}
+        />
       )}
     </div>
   );
